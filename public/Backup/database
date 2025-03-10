@@ -1,0 +1,52 @@
+CREATE TABLE "Carrello" (
+    "ID" INTEGER NOT NULL UNIQUE,
+    "EmailUtente" TEXT NOT NULL,  -- Collegato all'utente
+    "IDProdotto" INTEGER NOT NULL,  -- Prodotto aggiunto
+    "Quantita" INTEGER NOT NULL,  -- Quantità selezionata
+    PRIMARY KEY("ID" AUTOINCREMENT),
+    FOREIGN KEY("EmailUtente") REFERENCES "Utenti"("Email"),
+    FOREIGN KEY("IDProdotto") REFERENCES "Prodotti"("ID")
+);
+
+CREATE TABLE "DettagliOrdine" (
+    "ID" INTEGER NOT NULL UNIQUE,
+    "IDOrdine" INTEGER NOT NULL,  -- Collegato all'ordine
+    "IDProdotto" INTEGER NOT NULL,  -- Collegato al prodotto
+    "Quantita" INTEGER NOT NULL,  -- Quantità del prodotto nell'ordine
+    "PrezzoUnitario" REAL NOT NULL,  -- Prezzo al momento dell'acquisto
+    PRIMARY KEY("ID" AUTOINCREMENT),
+    FOREIGN KEY("IDOrdine") REFERENCES "Ordini"("ID"),
+    FOREIGN KEY("IDProdotto") REFERENCES "Prodotti"("ID")
+);
+
+CREATE TABLE "Ordini" (
+    "ID" INTEGER NOT NULL UNIQUE,  -- Numero ordine univoco
+    "EmailUtente" TEXT NOT NULL,   -- Collegamento all'utente
+    "Data" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,  -- Data ordine
+    "Totale" REAL NOT NULL,  -- Totale ordine (calcolato)
+    PRIMARY KEY("ID" AUTOINCREMENT),
+    FOREIGN KEY("EmailUtente") REFERENCES "Utenti"("Email")
+);
+
+CREATE TABLE "Prodotti" (
+	"ID"	INTEGER NOT NULL UNIQUE,
+	"Nome"	TEXT NOT NULL UNIQUE,
+	"Prezzo"	REAL NOT NULL,
+	"Quantita"	INTEGER NOT NULL,
+	"Categoria"	INTEGER NOT NULL,
+	"Disponibile"	boolean,
+	"Immagine"	TEXT NOT NULL,
+	"Descrizione"	TEXT NOT NULL,
+	CONSTRAINT "ID" PRIMARY KEY("ID" AUTOINCREMENT)
+);
+
+CREATE TABLE "Utenti" (
+	"Email"	TEXT NOT NULL UNIQUE,
+	"Password"	TEXT NOT NULL,
+	"Nome"	TEXT NOT NULL,
+	"Cognome"	TEXT NOT NULL,
+	"Indirizzo"	TEXT NOT NULL,
+	"Carta di credito"	BLOB NOT NULL,
+	"Numero di telefono"	INTEGER NOT NULL,
+	PRIMARY KEY("Email")
+);

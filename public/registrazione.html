@@ -12,24 +12,17 @@
 </head>
 <body>
     <div id="navbar-container"></div>
-    <script src="navbar.js"></script>
+    <script src="navbar.ejs"></script>
 
     <!--Pagina-->
-    <form method="post" align="center">
+    <form method="post" action="/registrazione" align="center">
         <h1 align="center">Registrazione</h1>
         <input type="text" id="nome" placeholder="Nome" name="nome" maxlength="50" required class="btn btn-outline-success" width="100">
         <input type="text" id="cognome" placeholder="Cognome" name="cognome" maxlength="50" required class="btn btn-outline-success" width="100">
-        <p>Sesso:</p>
-        <input type="radio" id="maschile" name="sesso" value="maschile">
-        <label for="maschile">Maschile</label>
-        <input type="radio" id="femminile" name="sesso" value="femminile">
-        <label for="femminile">Femminile</label>
-        <input type="radio" id="altro" name="sesso" value="altro">
-        <label for="altro">Altro</label>
+        <input type="text" id="indirizzo" placeholder="Indirizzo" name="indirizzo" maxlength="100" required class="btn btn-outline-success" width="100">
+        <input type="text" id="numero_di_telefono" placeholder="Numero di telefono" name="numero_di_telefono" maxlength="15" required class="btn btn-outline-success" width="100">
         <p></p>
-        <input type="text" id="eta" placeholder="Età" name="eta" maxlength="3" required class="btn btn-outline-success" width="100">
-        <p></p>
-        <input type="text" id="username" placeholder="Username" name="username" maxlength="50" required class="btn btn-outline-success" width="100">
+        <input type="text" id="username" placeholder="Email" name="email" maxlength="50" required class="btn btn-outline-success" width="100">
         <p></p>
         <input type="password" id="password" placeholder="Password" name="password" required class="btn btn-outline-success" width="100">
         <p></p>

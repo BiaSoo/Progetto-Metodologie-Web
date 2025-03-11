@@ -1,6 +1,6 @@
 <nav class="navbar navbar-expand-lg bg-body-tertiary">
     <div class="container-fluid">
-        <a class="navbar-brand" href="/">
+        <a class="navbar-brand" href="/views/index.ejs">
             <img src="logo.jpeg" width="100" alt="BeSure Farmacia">
         </a>
         <!--ricerca -->
@@ -39,9 +39,13 @@
 
             <!--account -->
             <ul class="nav navbar-nav navbar-right">
-                <li><a href="registrazione.html"><button type="button" class="btn btn-outline-success">Registrati</button></a></li>
-                <li><a href="accesso.html"><button type="button" class="btn btn-outline-success">Accedi</button></a></li>
-                <li><a href="account.html"><button type="button" class="btn btn-outline-success">Accesso riservato</button></a></li>
+                <% if (user) { %>
+                    <li><a href="/mio_account"><button type="button" class="btn btn-outline-success">Il mio account</button></a></li>
+                    <li><a href="/logout"><button type="button" class="btn btn-outline-danger">Logout</button></a></li>
+                <% } else { %>
+                    <li><a href="registrazione.html"><button type="button" class="btn btn-outline-success">Registrati</button></a></li>
+                    <li><a href="accesso.html"><button type="button" class="btn btn-outline-success">Accedi</button></a></li>
+                <% } %>
             </ul>
         </div>
     </div>

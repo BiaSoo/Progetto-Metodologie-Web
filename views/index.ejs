@@ -1,44 +1,71 @@
 <!DOCTYPE html>
-<html>
+<html lang="it">
 <head>
-    <link rel="stylesheet" href="/mystyle.css">
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
+    <title>Home</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans&display=swap">
+    <link rel="stylesheet" href="/css/style.css">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://getbootstrap.com/docs/5.3/assets/css/docs.css" rel="stylesheet">
-    <title>BeSure Farmacia</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.8.1/font/bootstrap-icons.min.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
     <style>
-        td {border-color:rgb(25, 143, 101);border-width: 1px;}
-        h1 {font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;}
+        .carousel-item img {
+            height: 400px;
+            object-fit: cover;
+        }
     </style>
 </head>
 <body>
-    <div id="navbar-container"></div>
-    <script src="/navbar.js"></script>
-    <!--Pagina-->
-    <font face="Calibri" align="center">   
-        <h2>La tua farmacia preferita, da oggi è anche On-line!</h2>
-        <p><h3>Prodotti più venduti:</h3></p> 
-    </font>
-    
-    <table align="center" class="table table-bordered"> 
-        <thead>
-            <tr>
-                <th>Immagine</th>
-                <th>Nome Prodotto</th>
-                <th>Prezzo</th>
-            </tr>
-        </thead>
-        <tbody>
-            <% products.forEach(product => { %>
-            <tr>
-                <td><a href="/prodotti/<%= product.ID %>"><img src="<%= product.image %>" width="250" height="200"></a></td>
-                <td><%= product.Nome %></td>
-                <td>€<%= product.Prezzo %></td>
-            </tr>
+    <%- include('navbar', { user: user }) %>
+
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Benvenuti nella nostra farmacia online</h1>
+        
+        <div id="carouselExampleIndicators" class="carousel slide mb-5" data-bs-ride="carousel">
+            <div class="carousel-indicators">
+                <% products.slice(0, 3).forEach((product, index) => { %>
+                    <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="<%= index %>" class="<%= index === 0 ? 'active' : '' %>" aria-current="<%= index === 0 ? 'true' : '' %>" aria-label="Slide <%= index + 1 %>"></button>
+                <% }) %>
+            </div>
+            <div class="carousel-inner">
+                <% products.slice(0, 3).forEach((product, index) => { %>
+                    <div class="carousel-item <%= index === 0 ? 'active' : '' %>">
+                        <img src="/images/<%= product.Immagine %>" class="d-block w-100" alt="<%= product.Nome %>">
+                        <div class="carousel-caption d-none d-md-block">
+                            <h5><%= product.Nome %></h5>
+                            <p><%= product.Descrizione %></p>
+                        </div>
+                    </div>
+                <% }) %>
+            </div>
+            <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Previous</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Next</span>
+            </button>
+        </div>
+
+        <h2 class="text-center mb-4">Prodotti più venduti</h2>
+        <div class="row">
+            <% products.slice(0, 6).forEach(product => { %>
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        <img src="/images/<%= product.Immagine %>" class="card-img-top" alt="<%= product.Nome %>" style="height: 200px; object-fit: cover;">
+                        <div class="card-body">
+                            <h5 class="card-title"><%= product.Nome %></h5>
+                            <p class="card-text"><%= product.Descrizione %></p>
+                            <p class="card-text">Prezzo: €<%= product.Prezzo %></p>
+                            <a href="/prodotti/<%= product.ID %>" class="btn btn-primary">Dettagli</a>
+                        </div>
+                    </div>
+                </div>
             <% }) %>
-        </tbody>
-    </table>	
+        </div>
+    </div>
 </body>
 </html>

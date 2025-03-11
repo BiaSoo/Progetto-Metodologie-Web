@@ -22,31 +22,35 @@ CREATE TABLE "DettagliOrdine" (
 CREATE TABLE "Ordini" (
     "ID" INTEGER NOT NULL UNIQUE,  -- Numero ordine univoco
     "EmailUtente" TEXT NOT NULL,   -- Collegamento all'utente
+    "Indirizzo" TEXT NOT NULL,     -- Collegamento all'indirizzo dell'utente
+    "NumeroDiTelefono" INTEGER NOT NULL, -- Collegamento al numero di telefono dell'utente
     "Data" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,  -- Data ordine
     "Totale" REAL NOT NULL,  -- Totale ordine (calcolato)
     PRIMARY KEY("ID" AUTOINCREMENT),
-    FOREIGN KEY("EmailUtente") REFERENCES "Utenti"("Email")
+    FOREIGN KEY("EmailUtente") REFERENCES "Utenti"("Email"),
+    FOREIGN KEY("Indirizzo") REFERENCES "Utenti"("Indirizzo"),
+    FOREIGN KEY("NumeroDiTelefono") REFERENCES "Utenti"("NumeroDiTelefono")
 );
 
 CREATE TABLE "Prodotti" (
-	"ID"	INTEGER NOT NULL UNIQUE,
-	"Nome"	TEXT NOT NULL UNIQUE,
-	"Prezzo"	REAL NOT NULL,
-	"Quantita"	INTEGER NOT NULL,
-	"Categoria"	INTEGER NOT NULL,
-	"Disponibile"	boolean,
-	"Immagine"	TEXT NOT NULL,
-	"Descrizione"	TEXT NOT NULL,
-	CONSTRAINT "ID" PRIMARY KEY("ID" AUTOINCREMENT)
+    "ID" INTEGER NOT NULL UNIQUE,
+    "Nome" TEXT NOT NULL UNIQUE,
+    "Prezzo" REAL NOT NULL,
+    "Quantita" INTEGER NOT NULL,
+    "Categoria" INTEGER NOT NULL,
+    "Disponibile" BOOLEAN,
+    "Immagine" TEXT NOT NULL,
+    "Descrizione" TEXT NOT NULL,
+    CONSTRAINT "ID" PRIMARY KEY("ID" AUTOINCREMENT)
 );
 
 CREATE TABLE "Utenti" (
-	"Email"	TEXT NOT NULL UNIQUE,
-	"Password"	TEXT NOT NULL,
-	"Nome"	TEXT NOT NULL,
-	"Cognome"	TEXT NOT NULL,
-	"Indirizzo"	TEXT NOT NULL,
-	"Carta di credito"	BLOB NOT NULL,
-	"Numero di telefono"	INTEGER NOT NULL,
-	PRIMARY KEY("Email")
+    Email TEXT NOT NULL UNIQUE,
+    Password TEXT NOT NULL,
+    Nome TEXT NOT NULL,
+    Cognome TEXT NOT NULL,
+    Indirizzo TEXT NOT NULL,
+    NumeroDiTelefono TEXT NOT NULL,
+    AccessoSpeciale BOOLEAN NOT NULL DEFAULT 0,
+    PRIMARY KEY(Email)
 );

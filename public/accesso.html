@@ -11,16 +11,18 @@
 </head>
 <body>
     <div id="navbar-container"></div>
-    <script src="navbar.js"></script>
+    <script src="navbar.ejs"></script>
 
     <!--Pagina-->
-    <form method="post" align="center">
+    <form method="post" action="/accesso" align="center">
         <h1>Login</h1>
-        <input type="text" id="username" placeholder="Username" name="username" class="btn btn-outline-success" width="100">
+        <input type="text" id="email" placeholder="Email" name="email" class="btn btn-outline-success" width="100">
         <p></p>
         <input type="password" id="password" placeholder="Password" name="password" class="btn btn-outline-success" width="100">
         <p></p>
         <button type="submit" name="login" class="btn btn-outline-success">Accedi</button>
+        <p></p>
+        <a href="/accesso_riservato" class="btn btn-outline-danger">Accesso Speciale</a>
     </form>
 </body>
 </html>

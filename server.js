@@ -1,8 +1,14 @@
 const express = require('express');
 const path = require('path');
-const db = require('./database');
+const bodyParser = require('body-parser');
+const sqlite3 = require('sqlite3').verbose();
+const session = require('express-session');
+const bcrypt = require('bcrypt');
 const app = express();
 const port = 3000;
+
+const saltRounds = 10;
+const db = new sqlite3.Database('./database.db');
 
 // Configura il motore di template EJS
 app.set('view engine', 'ejs');
@@ -10,6 +16,70 @@ app.set('views', path.join(__dirname, 'views'));
 
 // Serve i file statici dalla cartella 'public'
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(bodyParser.urlencoded({ extended: true }));
+
+// Configura il middleware per le sessioni
+app.use(session({
+    secret: 'secret-key',
+    resave: false,
+    saveUninitialized: true
+}));
+
+// Creazione e popolamento delle tabelle al primo avvio
+db.serialize(() => {
+    db.run(`CREATE TABLE IF NOT EXISTS Utenti (
+        Email TEXT NOT NULL UNIQUE,
+        Password TEXT NOT NULL,
+        Nome TEXT NOT NULL,
+        Cognome TEXT NOT NULL,
+        Indirizzo TEXT NOT NULL,
+        NumeroDiTelefono TEXT NOT NULL,
+        AccessoSpeciale BOOLEAN NOT NULL DEFAULT 0,
+        PRIMARY KEY(Email)
+    )`);
+
+    db.run(`CREATE TABLE IF NOT EXISTS Prodotti (
+        ID INTEGER NOT NULL UNIQUE,
+        Nome TEXT NOT NULL UNIQUE,
+        Prezzo REAL NOT NULL,
+        Quantita INTEGER NOT NULL,
+        Categoria TEXT NOT NULL,
+        Disponibile BOOLEAN NOT NULL DEFAULT 1,
+        Immagine TEXT NOT NULL,
+        Descrizione TEXT NOT NULL,
+        PRIMARY KEY(ID AUTOINCREMENT)
+    )`);
+
+    db.run(`CREATE TABLE IF NOT EXISTS Ordini (
+        ID INTEGER NOT NULL UNIQUE,
+        EmailUtente TEXT NOT NULL,
+        Indirizzo TEXT NOT NULL,
+        NumeroDiTelefono TEXT NOT NULL,
+        Data TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        Totale REAL NOT NULL,
+        PRIMARY KEY(ID AUTOINCREMENT),
+        FOREIGN KEY(EmailUtente) REFERENCES Utenti(Email),
+        FOREIGN KEY(Indirizzo) REFERENCES Utenti(Indirizzo),
+        FOREIGN KEY(NumeroDiTelefono) REFERENCES Utenti(NumeroDiTelefono)
+    )`);
+
+    // Inserimento utenti di esempio
+    db.run(`INSERT OR IGNORE INTO Utenti (Email, Password, Nome, Cognome, Indirizzo, NumeroDiTelefono, AccessoSpeciale) VALUES
+        ('admin@example.com', '$2b$10$KIX/8Q1J1Q1J1Q1J1Q1J1u1J1Q1J1Q1J1Q1J1Q1J1Q1J1Q1J1Q1J1', 'Admin', 'User', 'Via Roma 1', '1234567890', 1),
+        ('user@example.com', '$2b$10$KIX/8Q1J1Q1J1Q1J1Q1J1u1J1Q1J1Q1J1Q1J1Q1J1Q1J1Q1J1', 'User', 'Example', 'Via Milano 2', '0987654321', 0)
+    `);
+
+    // Inserimento prodotti di esempio
+    db.run(`INSERT OR IGNORE INTO Prodotti (Nome, Prezzo, Quantita, Categoria, Immagine, Descrizione) VALUES
+        ('Prodotto 1', 10.0, 100, 'Categoria 1', 'immagine1.jpg', 'Descrizione del prodotto 1'),
+        ('Prodotto 2', 20.0, 50, 'Categoria 2', 'immagine2.jpg', 'Descrizione del prodotto 2')
+    `);
+
+    // Inserimento ordini di esempio
+    db.run(`INSERT OR IGNORE INTO Ordini (EmailUtente, Indirizzo, NumeroDiTelefono, Totale) VALUES
+        ('user@example.com', 'Via Milano 2', '0987654321', 30.0)
+    `);
+});
 
 // Route per la pagina principale
 app.get('/', (req, res) => {
@@ -17,7 +87,7 @@ app.get('/', (req, res) => {
         if (err) {
             return res.status(500).send('Errore nel recupero dei prodotti');
         }
-        res.render('index', { products: rows });
+        res.render('index', { products: rows, user: req.session.user });
     });
 });
 
@@ -27,7 +97,7 @@ app.get('/prodotti', (req, res) => {
         if (err) {
             return res.status(500).send('Errore nel recupero dei prodotti');
         }
-        res.render('catalogo', { products: rows });
+        res.render('catalogo', { products: rows, user: req.session.user });
     });
 });
 
@@ -45,8 +115,91 @@ app.get('/prodotti/:id', (req, res) => {
         if (!row) {
             return res.status(404).send('Prodotto non trovato');
         }
-        res.render('prodotto', { product: row });
+        res.render('prodotto', { product: row, user: req.session.user });
     });
+});
+
+// Route per la registrazione
+app.post('/registrazione', (req, res) => {
+    const { nome, cognome, indirizzo, numero_di_telefono, email, password } = req.body;
+    bcrypt.hash(password, saltRounds, (err, hash) => {
+        if (err) {
+            console.error('Errore nell\'hashing della password:', err.message);
+            return res.status(500).send('Errore nella registrazione');
+        }
+        db.run('INSERT INTO Utenti (Nome, Cognome, Indirizzo, NumeroDiTelefono, Email, Password) VALUES (?, ?, ?, ?, ?, ?)', [nome, cognome, indirizzo, numero_di_telefono, email, hash], function(err) {
+            if (err) {
+                console.error('Errore nella registrazione:', err.message);
+                return res.status(500).send('Errore nella registrazione');
+            }
+            res.redirect('/');
+        });
+    });
+});
+
+// Route per l'accesso normale
+app.post('/accesso', (req, res) => {
+    const { email, password } = req.body;
+    db.get('SELECT * FROM Utenti WHERE Email = ?', [email], (err, row) => {
+        if (err) {
+            return res.status(500).send('Errore nell\'accesso');
+        }
+        if (!row) {
+            return res.status(401).send('Credenziali non valide');
+        }
+        bcrypt.compare(password, row.Password, (err, result) => {
+            if (err) {
+                return res.status(500).send('Errore nel confronto delle password');
+            }
+            if (!result) {
+                return res.status(401).send('Credenziali non valide');
+            }
+            req.session.user = row;
+            res.redirect('/');
+        });
+    });
+});
+
+// Route per l'accesso riservato
+app.post('/accesso_riservato', (req, res) => {
+    const { email, password } = req.body;
+    db.get('SELECT * FROM Utenti WHERE Email = ? AND AccessoSpeciale = 1', [email], (err, row) => {
+        if (err) {
+            return res.status(500).send('Errore nell\'accesso riservato');
+        }
+        if (!row) {
+            return res.status(401).send('Credenziali non valide o accesso non autorizzato');
+        }
+        bcrypt.compare(password, row.Password, (err, result) => {
+            if (err) {
+                return res.status(500).send('Errore nel confronto delle password');
+            }
+            if (!result) {
+                return res.status(401).send('Credenziali non valide o accesso non autorizzato');
+            }
+            req.session.user = row;
+            res.redirect('/area_riservata');
+        });
+    });
+});
+
+// Route per il logout
+app.get('/logout', (req, res) => {
+    req.session.destroy();
+    res.redirect('/');
+});
+
+// Middleware per verificare se l'utente è loggato
+function isAuthenticated(req, res, next) {
+    if (req.session.user) {
+        return next();
+    }
+    res.redirect('/accesso');
+}
+
+// Route per la pagina del mio account
+app.get('/mio_account', isAuthenticated, (req, res) => {
+    res.render('mio_account', { user: req.session.user });
 });
 
 app.listen(port, () => {

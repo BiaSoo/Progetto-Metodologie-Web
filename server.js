@@ -65,14 +65,15 @@ db.serialize(() => {
 
     // Inserimento utenti di esempio
     db.run(`INSERT OR IGNORE INTO Utenti (Email, Password, Nome, Cognome, Indirizzo, NumeroDiTelefono, AccessoSpeciale) VALUES
-        ('admin@example.com', '$2b$10$KIX/8Q1J1Q1J1Q1J1Q1J1u1J1Q1J1Q1J1Q1J1Q1J1Q1J1Q1J1Q1J1', 'Admin', 'User', 'Via Roma 1', '1234567890', 1),
+        ('admin@example.com', '$2b$10$KIX/8Q1J1Q1J1Q1J1Q1J1u1J1Q1J1Q1J1Q1J1Q1J1Q1J1Q1J1', 'Admin', 'User', 'Via Roma 1', '1234567890', 1),
         ('user@example.com', '$2b$10$KIX/8Q1J1Q1J1Q1J1Q1J1u1J1Q1J1Q1J1Q1J1Q1J1Q1J1Q1J1', 'User', 'Example', 'Via Milano 2', '0987654321', 0)
     `);
 
     // Inserimento prodotti di esempio
     db.run(`INSERT OR IGNORE INTO Prodotti (Nome, Prezzo, Quantita, Categoria, Immagine, Descrizione) VALUES
-        ('Prodotto 1', 10.0, 100, 'Categoria 1', 'immagine1.jpg', 'Descrizione del prodotto 1'),
-        ('Prodotto 2', 20.0, 50, 'Categoria 2', 'immagine2.jpg', 'Descrizione del prodotto 2')
+        ('La roche posay', 20.0, 100, 'Skincare', 'la-roche-posay.jpg', 'Descrizione del prodotto La roche posay'),
+        ('La roche posay effaclar', 20.0, 50, 'Skincare', 'la-roche-posay-effaclar.jpg', 'Descrizione del prodotto La roche posay effaclar'),
+        ('La roche posay effaclar gel', 20.0, 75, 'Skincare', 'la-roche-posay-effaclar-gel.jpg', 'Descrizione del prodotto La roche posay effaclar gel')
     `);
 
     // Inserimento ordini di esempio
@@ -120,6 +121,10 @@ app.get('/prodotti/:id', (req, res) => {
 });
 
 // Route per la registrazione
+app.get('/registrazione', (req, res) => {
+    res.render('registrazione', { user: req.session.user });
+});
+
 app.post('/registrazione', (req, res) => {
     const { nome, cognome, indirizzo, numero_di_telefono, email, password } = req.body;
     bcrypt.hash(password, saltRounds, (err, hash) => {
@@ -138,6 +143,10 @@ app.post('/registrazione', (req, res) => {
 });
 
 // Route per l'accesso normale
+app.get('/accesso', (req, res) => {
+    res.render('accesso', { user: req.session.user });
+});
+
 app.post('/accesso', (req, res) => {
     const { email, password } = req.body;
     db.get('SELECT * FROM Utenti WHERE Email = ?', [email], (err, row) => {
@@ -161,6 +170,10 @@ app.post('/accesso', (req, res) => {
 });
 
 // Route per l'accesso riservato
+app.get('/accesso_riservato', (req, res) => {
+    res.render('accesso_riservato', { user: req.session.user });
+});
+
 app.post('/accesso_riservato', (req, res) => {
     const { email, password } = req.body;
     db.get('SELECT * FROM Utenti WHERE Email = ? AND AccessoSpeciale = 1', [email], (err, row) => {
@@ -200,6 +213,38 @@ function isAuthenticated(req, res, next) {
 // Route per la pagina del mio account
 app.get('/mio_account', isAuthenticated, (req, res) => {
     res.render('mio_account', { user: req.session.user });
+});
+
+// Route per la ricerca dei prodotti
+app.get('/ricerca', (req, res) => {
+    const query = req.query.q;
+    db.all('SELECT * FROM Prodotti WHERE Nome LIKE ? AND Disponibile = 1', [`%${query}%`], (err, rows) => {
+        if (err) {
+            return res.status(500).send('Errore nel recupero dei prodotti');
+        }
+        res.render('ricerca', { products: rows, user: req.session.user, query: query });
+    });
+});
+
+// Route per le altre pagine
+app.get('/skincare', (req, res) => {
+    res.render('skincare', { user: req.session.user });
+});
+
+app.get('/farmaci_generici', (req, res) => {
+    res.render('farmaci_generici', { user: req.session.user });
+});
+
+app.get('/erboristeria', (req, res) => {
+    res.render('erboristeria', { user: req.session.user });
+});
+
+app.get('/integratori', (req, res) => {
+    res.render('integratori', { user: req.session.user });
+});
+
+app.get('/prodotti_esposizione', (req, res) => {
+    res.render('prodotti_esposizione', { user: req.session.user });
 });
 
 app.listen(port, () => {

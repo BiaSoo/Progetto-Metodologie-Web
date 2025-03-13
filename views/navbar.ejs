@@ -1,11 +1,11 @@
-<nav class="navbar navbar-expand-lg bg-body-tertiary">
+<nav class="navbar navbar-expand-lg bg-body-tertiary fixed-top">
     <div class="container-fluid">
         <a class="navbar-brand" href="/">
             <img src="/images/logo.jpeg" width="100" alt="BeSure Farmacia">
         </a>
         <!--ricerca -->
-        <form class="d-flex flex-grow-1 mx-3" role="search">
-            <input class="form-control me-2" type="search" placeholder="Ricerca" aria-label="Ricerca" style="flex-grow: 1;">
+        <form class="d-flex flex-grow-1 mx-3" role="search" action="/ricerca" method="get">
+            <input class="form-control me-2" type="search" placeholder="Ricerca" aria-label="Ricerca" name="q" style="flex-grow: 1;">
             <button class="btn btn-outline-success" type="submit">Cerca</button>
         </form>
 
@@ -15,27 +15,29 @@
 
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                <li class="nav-item">
-                    <a class="nav-link" href="/contatti.html">Chi siamo?</a>
-                </li>
+                
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        Catalogo Prodotti
+                        I nostri prodotti:
                     </a>
                     <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="/erboristeria.html">Erboristeria</a></li>
-                        <li><a class="dropdown-item" href="/farmaci_generici.html">Farmaci generici</a></li>
-                        <li><a class="dropdown-item" href="/skincare.html">Skincare</a></li>
-                        <li><a class="dropdown-item" href="/integratori.html">Integratori</a></li>
-                        <li><a class="dropdown-item" href="/prodotti_esposizione.html">Prodotti esposizione</a></li>
+                        <li><a class="dropdown-item" href="/erboristeria">Erboristeria</a></li>
+                        <li><a class="dropdown-item" href="/farmaci_generici">Farmaci generici</a></li>
+                        <li><a class="dropdown-item" href="/skincare">Skincare</a></li>
+                        <li><a class="dropdown-item" href="/integratori">Integratori</a></li>
+                        <li><a class="dropdown-item" href="/prodotti_esposizione">Prodotti esposizione</a></li>
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="/catalogo.html">Catalogo completo</a></li>
+                        <li><a class="dropdown-item" href="/catalogo">Catalogo completo</a></li>
                     </ul>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="/contatti.html">Chi siamo?</a>
                 </li>
             </ul>
 
             <a href="/carrello" class="btn btn-outline-success me-2">
-                <i class="bi bi-cart"></i> 
+                <i class="bi bi-cart"></i>
             </a>
 
             <!--account -->
@@ -44,8 +46,8 @@
                     <li><a href="/mio_account"><button type="button" class="btn btn-outline-success">Il mio account</button></a></li>
                     <li><a href="/logout"><button type="button" class="btn btn-outline-danger">Logout</button></a></li>
                 <% } else { %>
-                    <li><a href="/registrazione.html"><button type="button" class="btn btn-outline-success">Registrati</button></a></li>
-                    <li><a href="/accesso.html"><button type="button" class="btn btn-outline-success">Accedi</button></a></li>
+                    <li><a href="/registrazione"><button type="button" class="btn btn-outline-success">Registrati</button></a></li>
+                    <li><a href="/accesso"><button type="button" class="btn btn-outline-success">Accedi</button></a></li>
                 <% } %>
             </ul>
         </div>

@@ -1,0 +1,144 @@
+/* Stile generale per il corpo della pagina */
+body {
+    font-family: 'Open Sans', sans-serif;
+    background-color: #f8f9fa;
+    margin: 0;
+    padding-top: 70px; /* Aggiungi un padding-top per evitare che il contenuto venga coperto dalla navbar */
+}
+
+/* Stile per la navbar */
+.navbar {
+    background-color: #ffffff;
+    border-bottom: 1px solid #e0e0e0;
+    z-index: 1030; /* Assicurati che la navbar sia sopra altri elementi */
+}
+
+.navbar-brand img {
+    max-height: 100px; 
+}
+
+.navbar-nav .nav-link {
+    color: #333333;
+}
+
+.navbar-nav .nav-link:hover {
+    color: #28a745;
+}
+
+.navbar-toggler {
+    border: none;
+}
+
+.navbar-toggler-icon {
+    color: #28a745;
+}
+
+/* Stile per il form di ricerca nella navbar */
+form[role="search"] {
+    flex-grow: 1;
+}   
+
+form[role="search"] .form-control {
+    width: 80%;
+    display: inline-block;
+}
+
+form[role="search"] button {
+    width: 18%;
+    display: inline-block;
+    padding: 5px;
+}
+
+/* Stile per i pulsanti */
+.btn-outline-success {
+    color: #28a745;
+    border-color: #28a745;
+}
+
+.btn-outline-success:hover {
+    background-color: #28a745;
+    color: #ffffff;
+}
+
+.btn-outline-danger {
+    color: #dc3545;
+    border-color: #dc3545;
+}
+
+.btn-outline-danger:hover {
+    background-color: #dc3545;
+    color: #ffffff;
+}
+
+/* Stile per il carosello */
+.carousel-item img {
+    height: 400px;
+    object-fit: cover;
+}
+
+/* Stile per le carte dei prodotti */
+.card {
+    border: 1px solid #e0e0e0;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.card-img-top {
+    height: 200px;
+    object-fit: cover;
+}
+
+.card-body {
+    padding: 15px;
+}
+
+.card-title {
+    font-size: 1.25rem;
+    margin-bottom: 10px;
+}
+
+.card-text {
+    font-size: 1rem;
+    color: #666666;
+}
+
+/* Stile per la pagina del carrello */
+#carrello-body tr {
+    border-bottom: 1px solid #e0e0e0;
+}
+
+#totale-carrello {
+    font-size: 1.5rem;
+    font-weight: bold;
+    text-align: right;
+    margin-top: 20px;
+}
+
+/* Stile per i form di accesso e registrazione */
+form {
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 5px;
+}
+
+form h1 {
+    margin-bottom: 20px;
+}
+
+form input[type="text"],
+form input[type="password"] {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #e0e0e0;
+    border-radius: 5px;
+}
+
+form button {
+    width: 100%;
+    padding: 10px;
+    border-radius: 5px;
+}

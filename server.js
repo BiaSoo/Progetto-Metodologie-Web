@@ -4,11 +4,25 @@ const bodyParser = require('body-parser');
 const sqlite3 = require('sqlite3').verbose();
 const session = require('express-session');
 const bcrypt = require('bcrypt');
+const multer = require('multer');
 const app = express();
 const port = 3000;
 
 const saltRounds = 10;
 const db = new sqlite3.Database('./database.db');
+
+// Configurazione di multer per salvare le immagini nella cartella "public/images/prodotti"
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, path.join(__dirname, 'public/images/prodotti')); // Cartella di destinazione
+    },
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, uniqueSuffix + path.extname(file.originalname)); // Nome univoco per evitare conflitti
+    }
+});
+
+const upload = multer({ storage });
 
 // Configura il motore di template EJS
 app.set('view engine', 'ejs');
@@ -63,11 +77,19 @@ db.serialize(() => {
         FOREIGN KEY(NumeroDiTelefono) REFERENCES Utenti(NumeroDiTelefono)
     )`);
 
-    // Inserimento utenti di esempio
-    db.run(`INSERT OR IGNORE INTO Utenti (Email, Password, Nome, Cognome, Indirizzo, NumeroDiTelefono, AccessoSpeciale) VALUES
-        ('admin@example.com', '$2b$10$KIX/8Q1J1Q1J1Q1J1Q1J1u1J1Q1J1Q1J1Q1J1Q1J1Q1J1Q1J1', 'Admin', 'User', 'Via Roma 1', '1234567890', 1),
-        ('user@example.com', '$2b$10$KIX/8Q1J1Q1J1Q1J1Q1J1u1J1Q1J1Q1J1Q1J1Q1J1Q1J1Q1J1', 'User', 'Example', 'Via Milano 2', '0987654321', 0)
-    `);
+    // Hash della password dell'amministratore
+    bcrypt.hash('admin', saltRounds, (err, hash) => {
+        if (err) {
+            console.error('Errore nell\'hashing della password admin:', err.message);
+            return;
+        }
+
+        // Inserimento utenti di esempio
+        db.run(`INSERT OR IGNORE INTO Utenti (Email, Password, Nome, Cognome, Indirizzo, NumeroDiTelefono, AccessoSpeciale) VALUES
+            ('admin@example.com', ?, 'Admin', 'User', 'Via Roma 1', '1234567890', 1),
+            ('user@example.com', '$2b$10$KIX/8Q1J1Q1J1Q1J1Q1J1u1J1Q1J1Q1J1Q1J1Q1J1', 'User', 'Example', 'Via Milano 2', '0987654321', 0)
+        `, [hash]);
+    });
 
     // Inserimento prodotti di esempio
     db.run(`INSERT OR IGNORE INTO Prodotti (Nome, Prezzo, Quantita, Categoria, Immagine, Descrizione) VALUES
@@ -169,24 +191,24 @@ app.post('/accesso', (req, res) => {
             });
         }
 
-        // Aggiungi qui il controllo della password con bcrypt, se necessario
-        // Esempio:
-        // bcrypt.compare(password, row.Password, (err, result) => {
-        //     if (result) {
-        //         // Login riuscito
-        //         req.session.user = row;
-        //         return res.redirect('/');
-        //     } else {
-        //         return res.render('accesso', { 
-        //             user: null, 
-        //             errorMessage: 'Password errata.' 
-        //         });
-        //     }
-        // });
+        // Confronta la password fornita con quella memorizzata nel database
+        bcrypt.compare(password, row.Password, (err, result) => {
+            if (err) {
+                return res.status(500).send('Errore nel confronto delle password');
+            }
 
-        // Per ora, supponiamo che il login sia riuscito
-        req.session.user = row;
-        res.redirect('/');
+            if (result) {
+                // Login riuscito
+                req.session.user = row;
+                return res.redirect('/');
+            } else {
+                // Password errata
+                return res.render('accesso', { 
+                    user: null, 
+                    errorMessage: 'Password errata.' 
+                });
+            }
+        });
     });
 });
 
@@ -197,23 +219,84 @@ app.get('/accesso_riservato', (req, res) => {
 
 app.post('/accesso_riservato', (req, res) => {
     const { email, password } = req.body;
+
+    if (!email || !password) {
+        return res.render('accesso_riservato', { 
+            user: null, 
+            errorMessage: 'Per favore, compila tutti i campi.' 
+        });
+    }
+
     db.get('SELECT * FROM Utenti WHERE Email = ? AND AccessoSpeciale = 1', [email], (err, row) => {
         if (err) {
             return res.status(500).send('Errore nell\'accesso riservato');
         }
+
         if (!row) {
-            return res.status(401).send('Credenziali non valide o accesso non autorizzato');
+            return res.render('accesso_riservato', { 
+                user: null, 
+                errorMessage: 'Non hai i permessi per accedere a questa area.' 
+            });
         }
+
+        // Confronta la password fornita con quella memorizzata nel database
         bcrypt.compare(password, row.Password, (err, result) => {
             if (err) {
                 return res.status(500).send('Errore nel confronto delle password');
             }
-            if (!result) {
-                return res.status(401).send('Credenziali non valide o accesso non autorizzato');
+
+            if (result) {
+                // Accesso riservato riuscito
+                req.session.user = row;
+                return res.redirect('/area_riservata');
+            } else {
+                // Password errata
+                return res.render('accesso_riservato', { 
+                    user: null, 
+                    errorMessage: 'Password errata.' 
+                });
             }
-            req.session.user = row;
-            res.redirect('/area_riservata');
         });
+    });
+});
+
+// Middleware per verificare se l'utente è l'amministratore
+function isAdmin(req, res, next) {
+    if (req.session.user && req.session.user.Email === 'admin@example.com') {
+        return next();
+    }
+    res.redirect('/accesso_riservato');
+}
+
+// Route per la pagina area riservata
+app.get('/area_riservata', isAdmin, (req, res) => {
+    db.all('SELECT * FROM Prodotti', (err, rows) => {
+        if (err) {
+            console.error('Errore nel recupero dei prodotti:', err.message);
+            return res.status(500).send('Errore nel recupero dei prodotti');
+        }
+        res.render('area_riservata', { user: req.session.user, products: rows });
+    });
+});
+
+app.post('/modifica_prodotto', upload.single('immagine'), (req, res) => {
+    const { id, nome, prezzo, quantita, categoria } = req.body;
+    const immagine = req.file ? `${req.file.filename}` : null; // Percorso relativo
+
+    const query = immagine
+        ? 'UPDATE Prodotti SET Nome = ?, Prezzo = ?, Quantita = ?, Categoria = ?, Immagine = ? WHERE ID = ?'
+        : 'UPDATE Prodotti SET Nome = ?, Prezzo = ?, Quantita = ?, Categoria = ? WHERE ID = ?';
+
+    const params = immagine
+        ? [nome, prezzo, quantita, categoria, immagine, id]
+        : [nome, prezzo, quantita, categoria, id];
+
+    db.run(query, params, (err) => {
+        if (err) {
+            console.error('Errore nella modifica del prodotto:', err.message);
+            return res.status(500).send('Errore nella modifica del prodotto');
+        }
+        res.redirect('/area_riservata');
     });
 });
 

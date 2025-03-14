@@ -17,12 +17,15 @@
     <!--Pagina-->
     <div class="container mt-5">
         <form method="post" action="/accesso_riservato" align="center">
-            <h1>Login riservato</h1>
+            <h1>Accesso Riservato</h1>
             <input type="text" id="email" placeholder="Email" name="email" maxlength="50" required class="btn btn-outline-success" width="100">
             <p></p>
             <input type="password" id="password" placeholder="Password" name="password" maxlength="50" required class="btn btn-outline-success" width="100">
             <p></p>
-            <button type="submit" name="login" class="btn btn-outline-success">Accedi all'area riservata</button>
+            <button type="submit" name="login" class="btn btn-outline-success">Accedi</button>
+            <% if (typeof errorMessage !== 'undefined') { %>
+                <p id="error-message" style="color: red;"><%= errorMessage %></p>
+            <% } %>
         </form>
     </div>
 </body>

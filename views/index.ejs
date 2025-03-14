@@ -32,7 +32,7 @@
             <div class="carousel-inner">
                 <% products.slice(0, 3).forEach((product, index) => { %>
                     <div class="carousel-item <%= index === 0 ? 'active' : '' %>">
-                        <img src="/images/<%= product.Immagine %>" class="d-block w-100" alt="<%= product.Nome %>">
+                        <img src="/images/prodotti/<%= product.Immagine %>" class="d-block w-100" alt="<%= product.Nome %>">
                         <div class="carousel-caption d-none d-md-block">
                             <h5><%= product.Nome %></h5>
                             <p><%= product.Descrizione %></p>
@@ -55,7 +55,7 @@
             <% products.slice(0, 6).forEach(product => { %>
                 <div class="col-md-4 mb-4">
                     <div class="card h-100">
-                        <img src="/images/<%= product.Immagine %>" class="card-img-top" alt="<%= product.Nome %>" style="height: 200px; object-fit: cover;">
+                        <img src="/images/prodotti/<%= product.Immagine %>" class="card-img-top" alt="<%= product.Nome %>" style="height: 200px; object-fit: cover;">
                         <div class="card-body">
                             <h5 class="card-title"><%= product.Nome %></h5>
                             <p class="card-text"><%= product.Descrizione %></p>

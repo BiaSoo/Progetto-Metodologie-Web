@@ -3,14 +3,14 @@ body {
     font-family: 'Open Sans', sans-serif;
     background-color: #f8f9fa;
     margin: 0;
-    padding-top: 70px; /* Aggiungi un padding-top per evitare che il contenuto venga coperto dalla navbar */
+    padding-top: 70px; 
 }
 
 /* Stile per la navbar */
 .navbar {
     background-color: #ffffff;
     border-bottom: 1px solid #e0e0e0;
-    z-index: 1030; /* Assicurati che la navbar sia sopra altri elementi */
+    z-index: 1030; 
 }
 
 .navbar-brand img {
@@ -39,8 +39,15 @@ form[role="search"] {
 }   
 
 form[role="search"] .form-control {
-    width: 80%;
+    width: 90%;
     display: inline-block;
+    padding: 5px;
+}
+
+form[role="search"] .form-control:focus {
+    box-shadow: 0 0 8px rgba(40, 167, 69, 0.5); 
+    border-color: #28a745;
+    outline: none; 
 }
 
 form[role="search"] button {
@@ -78,9 +85,15 @@ form[role="search"] button {
 
 /* Stile per le carte dei prodotti */
 .card {
-    border: 1px solid #e0e0e0;
+    border: 1px solid #e0e0e0; 
     border-radius: 5px;
     overflow: hidden;
+    transition: all 0.3s ease; 
+}
+
+.card:hover {
+    border-color: #007bff; 
+    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.2); 
 }
 
 .card-img-top {
@@ -100,6 +113,19 @@ form[role="search"] button {
 .card-text {
     font-size: 1rem;
     color: #666666;
+}
+
+.card .btn {
+    color: #28a745; 
+    border: 1px solid #28a745; 
+    background-color: #ffffff; 
+    transition: all 0.3s ease; 
+}
+
+.card .btn:hover {
+    color: #ffffff; 
+    background-color: #007bff; 
+    border-color: #007bff; 
 }
 
 /* Stile per la pagina del carrello */
@@ -128,6 +154,7 @@ form h1 {
     margin-bottom: 20px;
 }
 
+/* Stile per i campi di input */
 form input[type="text"],
 form input[type="password"] {
     width: 100%;
@@ -135,6 +162,24 @@ form input[type="password"] {
     margin-bottom: 10px;
     border: 1px solid #e0e0e0;
     border-radius: 5px;
+    background-color: #ffffff; 
+    color: #000000; 
+    transition: box-shadow 0.3s ease; 
+}
+
+form input[type="text"]:hover,
+form input[type="password"]:hover {
+    box-shadow: 0 0 8px rgba(40, 167, 69, 0.5); 
+    background-color: #ffffff;
+    outline: none; 
+}
+
+form input[type="text"]:focus,
+form input[type="password"]:focus {
+    box-shadow: 0 0 8px rgba(40, 167, 69, 0.5); 
+    outline: none; 
+    background-color: #ffffff; 
+    color: #000000; 
 }
 
 form button {

@@ -15,18 +15,20 @@
     <%- include('navbar', { user: user }) %>
 
     <!--Pagina-->
-    <form method="post" action="/registrazione" align="center">
-        <h1 align="center">Registrazione</h1>
-        <input type="text" id="nome" placeholder="Nome" name="nome" maxlength="50" required class="btn btn-outline-success" width="100">
-        <input type="text" id="cognome" placeholder="Cognome" name="cognome" maxlength="50" required class="btn btn-outline-success" width="100">
-        <input type="text" id="indirizzo" placeholder="Indirizzo" name="indirizzo" maxlength="100" required class="btn btn-outline-success" width="100">
-        <input type="text" id="numero_di_telefono" placeholder="Numero di telefono" name="numero_di_telefono" maxlength="15" required class="btn btn-outline-success" width="100">
-        <p></p>
-        <input type="text" id="username" placeholder="Email" name="email" maxlength="50" required class="btn btn-outline-success" width="100">
-        <p></p>
-        <input type="password" id="password" placeholder="Password" name="password" required class="btn btn-outline-success" width="100">
-        <p></p>
-        <button type="submit" name="register" class="btn btn-outline-success">Registrati</button>
-    </form>
+    <div class="container mt-5">
+        <form method="post" action="/registrazione" align="center">
+            <h1 align="center">Registrazione</h1>
+            <input type="text" id="nome" placeholder="Nome" name="nome" maxlength="50" required class="btn btn-outline-success" width="100">
+            <input type="text" id="cognome" placeholder="Cognome" name="cognome" maxlength="50" required class="btn btn-outline-success" width="100">
+            <input type="text" id="indirizzo" placeholder="Indirizzo" name="indirizzo" maxlength="100" required class="btn btn-outline-success" width="100">
+            <input type="text" id="numero_di_telefono" placeholder="Numero di telefono" name="numero_di_telefono" maxlength="15" required class="btn btn-outline-success" width="100">
+            <p></p>
+            <input type="text" id="username" placeholder="Email" name="email" maxlength="50" required class="btn btn-outline-success" width="100">
+            <p></p>
+            <input type="password" id="password" placeholder="Password" name="password" maxlength="50" required class="btn btn-outline-success" width="100">
+            <p></p>
+            <button type="submit" name="register" class="btn btn-outline-success">Registrati</button>
+        </form>
+    </div>
 </body>
 </html>

@@ -3,14 +3,14 @@ body {
     font-family: 'Open Sans', sans-serif;
     background-color: #f8f9fa;
     margin: 0;
-    padding-top: 70px; 
+    padding-top: 100px; 
 }
 
 /* Stile per la navbar */
 .navbar {
     background-color: #ffffff;
     border-bottom: 1px solid #e0e0e0;
-    z-index: 1030; 
+    z-index: 1000; 
 }
 
 .navbar-brand img {
@@ -33,27 +33,74 @@ body {
     color: #28a745;
 }
 
-/* Stile per il form di ricerca nella navbar */
-form[role="search"] {
+/* Barra di ricerca */
+.search-bar-container {
+    display: flex;
     flex-grow: 1;
-}   
-
-form[role="search"] .form-control {
-    width: 90%;
-    display: inline-block;
-    padding: 5px;
+    width: 100%; 
+    justify-content: center;
+    align-items: center;
+    margin: 0; 
+    background-color: none;
 }
 
-form[role="search"] .form-control:focus {
-    box-shadow: 0 0 8px rgba(40, 167, 69, 0.5); 
-    border-color: #28a745;
-    outline: none; 
+.search-bar-container form {
+    display: flex;
+    width: 60%; 
+    max-width: 60%; 
+    border: none;
+    background-color: transparent;
+    margin: 0; 
 }
 
-form[role="search"] button {
-    width: 18%;
+.search-bar-container input {
+    flex-grow: 1;
+    font-size: 1.1rem;
+    border: 1px solid #ccc;
+    border-right: none;
+    padding: 5px; 
+    border-radius: 5px 0 0 5px;
+    width: 85%;
+    max-width: 85%; 
+    background-color: #ffffff;
+}
+
+.search-bar-container button {
+    font-size: 1.1rem; 
+    width: 10%; 
+    max-width: 100px; 
+    min-width: 50px; 
+    padding: 5px; 
+    border-radius: 0 5px 5px 0;
+    text-overflow: ellipsis; 
+    white-space: nowrap; 
+    overflow: hidden; 
+}
+
+/* Aggiungi una regola per schermi molto piccoli */
+@media (max-width: 576px) {
+    .search-bar-container button {
+        font-size: 0.9rem; 
+        width: auto; 
+    }
+}
+
+/* Stile per i bottoni delle categorie */
+.category-box {
+    padding: 15px 20px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    text-decoration: none;
+    color: #333;
+    background: transparent;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    margin: 5px;
     display: inline-block;
-    padding: 5px;
+}
+.category-box:hover {
+    box-shadow: 0 0 10px var(--hover-color);
+    color: var(--hover-color);
 }
 
 /* Stile per i pulsanti */
@@ -186,4 +233,18 @@ form button {
     width: 100%;
     padding: 10px;
     border-radius: 5px;
+}
+
+/* Stile per il divisorio verticale */
+.vertical-divider {
+    width: 1px;
+    height: 20px;
+    background-color: #ccc;
+    margin: 0 10px;
+    align-self: center;
+}
+
+.vertical-divider-tall {
+    height: 40px; /* Altezza maggiore rispetto agli altri divisori */
+    background-color: #aaa; /* Puoi personalizzare il colore se necessario */
 }

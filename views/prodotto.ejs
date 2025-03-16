@@ -31,10 +31,71 @@
                 <div class="col-md-6">
                     <h3>Prezzo: €<%= product.Prezzo %></h3>
                     <p>Categoria: <%= product.Categoria %></p>
-                    <p>Disponibilità: <%= product.Disponibile ? 'Disponibile' : 'Non disponibile' %></p>
+                    <p>Descrizione: <%= product.Descrizione %></p>
+                    <div class="d-flex align-items-center mt-3">
+                        <button class="btn btn-outline-secondary" id="decrease-quantity">-</button>
+                        <input type="number" id="quantity" class="form-control mx-2" value="1" min="1" style="width: 70px;" readonly>
+                        <button class="btn btn-outline-secondary" id="increase-quantity">+</button>
+                    </div>
+                    <button class="btn btn-success mt-3" id="add-to-cart">Aggiungi al carrello</button>
+                    <p id="error-message" class="text-danger mt-2" style="display: none;"></p>
                 </div>
             </div>
         </div>
     </div>    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const decreaseButton = document.getElementById('decrease-quantity');
+            const increaseButton = document.getElementById('increase-quantity');
+            const quantityInput = document.getElementById('quantity');
+            const addToCartButton = document.getElementById('add-to-cart');
+            const errorMessage = document.getElementById('error-message');
+            const productId = <%= product.ID %>; // Passa il valore come numero
+            const sessionId = "<%= sessionID %>";
+
+            decreaseButton.addEventListener('click', () => {
+                const currentQuantity = parseInt(quantityInput.value, 10);
+                if (currentQuantity > 1) {
+                    quantityInput.value = currentQuantity - 1;
+                    errorMessage.style.display = 'none';
+                }
+            });
+
+            increaseButton.addEventListener('click', () => {
+                quantityInput.value = parseInt(quantityInput.value, 10) + 1;
+                errorMessage.style.display = 'none';
+            });
+
+            addToCartButton.addEventListener('click', async () => {
+                const quantity = parseInt(quantityInput.value, 10);
+                if (quantity < 1) {
+                    errorMessage.textContent = 'Impossibile inserire un articolo di quantità zero!';
+                    errorMessage.style.display = 'block';
+                    return;
+                }
+
+                try {
+                    const response = await fetch('/aggiungi_al_carrello', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ productId, quantity, sessionId })
+                    });
+
+                    const result = await response.json();
+                    if (result.success) {
+                        alert('Prodotto aggiunto al carrello!');
+                    } else {
+                        errorMessage.textContent = result.message || 'Errore durante l\'aggiunta al carrello.';
+                        errorMessage.style.display = 'block';
+                    }
+                } catch (error) {
+                    errorMessage.textContent = 'Errore durante l\'aggiunta al carrello.';
+                    errorMessage.style.display = 'block';
+                }
+            });
+        });
+    </script>
 </body>
 </html>

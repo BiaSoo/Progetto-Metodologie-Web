@@ -39,6 +39,14 @@ app.use(session({
     saveUninitialized: true
 }));
 
+// Middleware per generare un SessionID univoco per utenti non registrati
+app.use((req, res, next) => {
+    if (!req.session.sessionID) {
+        req.session.sessionID = `sess-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    }
+    next();
+});
+
 // Creazione e popolamento delle tabelle al primo avvio
 db.serialize(() => {
     db.run(`CREATE TABLE IF NOT EXISTS Utenti (
@@ -77,6 +85,16 @@ db.serialize(() => {
         FOREIGN KEY(NumeroDiTelefono) REFERENCES Utenti(NumeroDiTelefono)
     )`);
 
+    db.run(`CREATE TABLE IF NOT EXISTS Carrello (
+        EmailUtente TEXT,
+        SessionID TEXT NOT NULL,
+        IDProdotto INTEGER NOT NULL,
+        Quantita INTEGER NOT NULL,
+        PRIMARY KEY(EmailUtente, SessionID, IDProdotto),
+        FOREIGN KEY(EmailUtente) REFERENCES Utenti(Email),
+        FOREIGN KEY(IDProdotto) REFERENCES Prodotti(ID)
+    )`);
+
     // Hash della password dell'amministratore
     bcrypt.hash('admin', saltRounds, (err, hash) => {
         if (err) {
@@ -87,7 +105,7 @@ db.serialize(() => {
         // Inserimento utenti di esempio
         db.run(`INSERT OR IGNORE INTO Utenti (Email, Password, Nome, Cognome, Indirizzo, NumeroDiTelefono, AccessoSpeciale) VALUES
             ('admin@example.com', ?, 'Admin', 'User', 'Via Roma 1', '1234567890', 1),
-            ('user@example.com', '$2b$10$KIX/8Q1J1Q1J1Q1J1Q1J1u1J1Q1J1Q1J1Q1J1Q1J1', 'User', 'Example', 'Via Milano 2', '0987654321', 0)
+            ('user@example.com', '$2b$10$KIX/8Q1J1Q1J1Q1J1Q1J1u1J1Q1J1Q1J1Q1J1', 'User', 'Example', 'Via Milano 2', '0987654321', 0)
         `, [hash]);
     });
 
@@ -115,7 +133,7 @@ app.get('/', (req, res) => {
 });
 
 // Route per la pagina del catalogo prodotti
-app.get('/prodotti', (req, res) => {
+app.get('/catalogo', (req, res) => {
     db.all('SELECT * FROM Prodotti WHERE Disponibile = 1', (err, rows) => {
         if (err) {
             return res.status(500).send('Errore nel recupero dei prodotti');
@@ -138,7 +156,7 @@ app.get('/prodotti/:id', (req, res) => {
         if (!row) {
             return res.status(404).send('Prodotto non trovato');
         }
-        res.render('prodotto', { product: row, user: req.session.user });
+        res.render('prodotto', { product: row, user: req.session.user, sessionID: req.session.sessionID });
     });
 });
 
@@ -200,6 +218,18 @@ app.post('/accesso', (req, res) => {
             if (result) {
                 // Login riuscito
                 req.session.user = row;
+
+                // Aggiorna il carrello con i dati dell'utente
+                db.run(
+                    `UPDATE Carrello SET EmailUtente = ? WHERE SessionID = ?`,
+                    [row.Email, req.session.sessionID],
+                    (err) => {
+                        if (err) {
+                            console.error('Errore nella sincronizzazione del carrello:', err.message);
+                        }
+                    }
+                );
+
                 return res.redirect('/');
             } else {
                 // Password errata
@@ -349,6 +379,65 @@ app.get('/integratori', (req, res) => {
 
 app.get('/prodotti_esposizione', (req, res) => {
     res.render('prodotti_esposizione', { user: req.session.user });
+});
+
+app.post('/aggiungi_al_carrello', (req, res) => {
+    const { productId, quantity } = req.body;
+
+    console.log(`ID prodotto ricevuto: ${productId}`); 
+
+    if (!productId || isNaN(productId)) {
+        console.error('ID prodotto non valido o non definito.');
+        return res.status(400).json({ success: false, message: 'ID prodotto non valido.' });
+    }
+
+    if (quantity < 1) {
+        return res.json({ success: false, message: 'Impossibile inserire un articolo di quantità zero!' });
+    }
+
+    db.get('SELECT ID, Quantita FROM Prodotti WHERE ID = ?', [productId], (err, row) => {
+        if (err) {
+            console.error('Errore nel controllo della quantità:', err.message);
+            return res.status(500).json({ success: false, message: 'Errore interno del server.' });
+        }
+
+        if (!row) {
+            console.error(`Prodotto con ID ${productId} non trovato nel database.`);
+            return res.json({ success: false, message: 'Prodotto non trovato.' });
+        }
+
+        console.log(`Prodotto trovato: ID=${row.ID}, Quantita disponibile=${row.Quantita}`);
+
+        if (row.Quantita < quantity) {
+            return res.json({ success: false, message: 'Quantità non disponibile in magazzino.' });
+        }
+
+        const emailUtente = req.session.user ? req.session.user.Email : null;
+        const sessionID = req.session.sessionID;
+
+        db.run(
+            `INSERT INTO Carrello (EmailUtente, SessionID, IDProdotto, Quantita) 
+             VALUES (?, ?, ?, ?) 
+             ON CONFLICT(EmailUtente, SessionID, IDProdotto) 
+             DO UPDATE SET Quantita = Quantita + ?`,
+            [emailUtente, sessionID, productId, quantity, quantity],
+            (err) => {
+                if (err) {
+                    console.error('Errore nell\'aggiunta al carrello:', err.message);
+                    return res.status(500).json({ success: false, message: 'Errore interno del server.' });
+                }
+
+                db.run('UPDATE Prodotti SET Quantita = Quantita - ? WHERE ID = ?', [quantity, productId], (err) => {
+                    if (err) {
+                        console.error('Errore nell\'aggiornamento della quantità:', err.message);
+                        return res.status(500).json({ success: false, message: 'Errore interno del server.' });
+                    }
+
+                    res.json({ success: true, message: 'Prodotto aggiunto al carrello!' });
+                });
+            }
+        );
+    });
 });
 
 app.listen(port, () => {

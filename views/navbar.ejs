@@ -3,78 +3,54 @@
         <a class="navbar-brand" href="/">
             <img src="/images/logo.jpeg" width="100" alt="BeSure Farmacia">
         </a>
-        <!-- Ricerca -->
-        <form class="d-flex flex-grow-1 mx-3" role="search" action="/ricerca" method="get">
-            <input class="form-control me-2" type="search" placeholder="Ricerca" aria-label="Ricerca" name="q" style="flex-grow: 1;">
-            <button class="btn btn-outline-success" type="submit">Cerca</button>
-        </form>
+
+        <!-- Barra di ricerca ingrandita -->
+        <div class="search-bar-container flex-grow-1">
+            <form class="form-outline d-flex" action="/ricerca" method="GET">
+                <input class="form-control" type="search" placeholder="Ricerca" aria-label="Ricerca" name="q">
+                <button class="btn btn-outline-success" type="submit">Cerca</button>
+            </form>
+        </div>
 
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Attiva/disattiva la navigazione">
             <span class="navbar-toggler-icon"></span>
         </button>
 
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <div class="ms-auto d-flex align-items-center">
                 <% if (user && user.Email === 'admin@example.com') { %>
-                    <!-- Mostra solo per l'amministratore -->
-                    <li class="nav-item">
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                I nostri prodotti:
-                            </a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="/erboristeria">Erboristeria</a></li>
-                                <li><a class="dropdown-item" href="/farmaci_generici">Farmaci generici</a></li>
-                                <li><a class="dropdown-item" href="/skincare">Skincare</a></li>
-                                <li><a class="dropdown-item" href="/integratori">Integratori</a></li>
-                                <li><a class="dropdown-item" href="/prodotti_esposizione">Prodotti esposizione</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="/catalogo">Catalogo completo</a></li>
-                            </ul>
-                        </li>
-                    </li>
+                    <a href="/area_riservata" class="btn btn-outline-success me-2">Area Riservata</a>
+                    <a href="/logout" class="btn btn-outline-danger">Logout</a>
                 <% } else { %>
-                    <!-- Mostra per utenti normali -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            I nostri prodotti:
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="/erboristeria">Erboristeria</a></li>
-                            <li><a class="dropdown-item" href="/farmaci_generici">Farmaci generici</a></li>
-                            <li><a class="dropdown-item" href="/skincare">Skincare</a></li>
-                            <li><a class="dropdown-item" href="/integratori">Integratori</a></li>
-                            <li><a class="dropdown-item" href="/prodotti_esposizione">Prodotti esposizione</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="/catalogo">Catalogo completo</a></li>
-                        </ul>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="/contatti.html">Chi siamo?</a>
-                    </li>
-                <% } %>
-            </ul>
-
-            <% if (user && user.Email === 'admin@example.com') { %>
-                <!-- Mostra solo per l'amministratore -->
-                <a href="/area_riservata" class="btn btn-outline-success me-2">Area Riservata</a>
-                <a href="/logout" class="btn btn-outline-danger">Logout</a>
-            <% } else { %>
-                <!-- Mostra per utenti normali -->
-                <a href="/carrello" class="btn btn-outline-success me-2">
-                    <i class="bi bi-cart"></i>
-                </a>
-                <ul class="nav navbar-nav navbar-right">
+                    <a href="/carrello" class="btn btn-outline-success me-2">
+                        <i class="bi bi-cart"></i>
+                    </a>
                     <% if (user) { %>
-                        <li><a href="/mio_account"><button type="button" class="btn btn-outline-success">Il mio account</button></a></li>
-                        <li><a href="/logout"><button type="button" class="btn btn-outline-danger">Logout</button></a></li>
+                        <a href="/mio_account" class="btn btn-outline-success me-2">Il mio account</a>
+                        <a href="/logout" class="btn btn-outline-danger">Logout</a>
                     <% } else { %>
-                        <li><a href="/registrazione"><button type="button" class="btn btn-outline-success">Registrati</button></a></li>
-                        <li><a href="/accesso"><button type="button" class="btn btn-outline-success">Accedi</button></a></li>
+                        <a href="/registrazione" class="btn btn-outline-success me-2">Registrati</a>
+                        <a href="/accesso" class="btn btn-outline-success">Accedi</a>
                     <% } %>
-                </ul>
-            <% } %>
+                <% } %>
+            </div>
         </div>
+    </div>
+</nav>
+
+<!-- Seconda barra di navigazione con categorie -->
+<nav class="navbar navbar-expand-lg bg-light categories-bar">
+    <div class="container-fluid d-flex flex-wrap justify-content-center">
+        <a class="category-box" href="/erboristeria" style="--hover-color: #5ba728;">Erboristeria</a>
+        <div class="vertical-divider"></div>
+        <a class="category-box" href="/skincare" style="--hover-color: #007bff;">Skincare</a>
+        <div class="vertical-divider"></div>
+        <a class="category-box" href="/integratori" style="--hover-color: #ff9800;">Integratori</a>
+        <div class="vertical-divider"></div>
+        <a class="category-box" href="/farmaci_generici" style="--hover-color: #c935dc;">Farmaci Generici</a>
+        <div class="vertical-divider"></div>
+        <a class="category-box" href="/prodotti_esposizione" style="--hover-color: #07e2ff;">Prodotti esposizione</a>
+        <div class="vertical-divider vertical-divider-tall"></div>
+        <a class="category-box" href="/catalogo" style="--hover-color: #28a745;">Catalogo Prodotti</a>
     </div>
 </nav>

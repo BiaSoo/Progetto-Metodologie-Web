@@ -17,7 +17,7 @@
     <div class="container mt-5">
         <h1 class="text-center mb-4">Catalogo Prodotti</h1>
         <div class="row">
-            <% products.slice(0, 6).forEach(product => { %>
+            <% products.forEach(product => { %>
                 <div class="col-md-4 mb-4">
                     <div class="card h-100">
                         <img src="/images/prodotti/<%= product.Immagine %>" class="card-img-top" alt="<%= product.Nome %>" style="height: 200px; object-fit: cover;">

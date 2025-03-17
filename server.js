@@ -121,7 +121,24 @@ db.serialize(() => {
     db.run(`INSERT OR IGNORE INTO Prodotti (Nome, Prezzo, Quantita, Categoria, Immagine, Descrizione) VALUES
         ('La roche posay', 20.0, 100, 'Skincare', 'la-roche-posay.jpg', 'Descrizione del prodotto La roche posay'),
         ('La roche posay effaclar', 20.0, 50, 'Skincare', 'la-roche-posay-effaclar.jpg', 'Descrizione del prodotto La roche posay effaclar'),
-        ('La roche posay effaclar gel', 20.0, 75, 'Skincare', 'la-roche-posay-effaclar-gel.jpg', 'Descrizione del prodotto La roche posay effaclar gel')
+        ('La roche posay effaclar gel', 20.0, 75, 'Skincare', 'la-roche-posay-effaclar-gel.jpg', 'Descrizione del prodotto La roche posay effaclar gel'),
+        ('Acqua micellare CeraVe', 13.69, 100, 'Skincare', 'cerave-acqua-micellare.jpg', 'L’ Acqua Micellare Detergente CeraVe è un detergente viso delicato con formula senza risciacquo. Arricchita con tre ceramidi essenziali e niacinamide, questa acqua micellare rimuove le impurità, sebo in eccesso e make up, nel rispetto della barriera protettiva della pelle. Non comedogenica, senza profumo. Adatta a pelli sensibili.'),
+        ('Crema viso CeraVe', 12.99, 100, 'Skincare', 'cerave-crema-viso.jpg', 'La Crema Viso Idratante CeraVe è una crema viso idratante per pelli secche e molto secche. Arricchita con tre ceramidi essenziali e acido ialuronico, questa crema viso idratante rafforza la barriera protettiva della pelle e idrata a fondo. Non comedogenica, senza profumo. Adatta a pelli sensibili.'),
+        ('Crema mani Neutrogena', 3.99, 100, 'Skincare', 'neutrogena-crema-mani.jpg', 'La Crema Mani Concentrata Neutrogena è una crema mani idratante e protettiva per mani secche e screpolate. Arricchita con glicerina, questa crema mani idrata a fondo e protegge la pelle delle mani. Non unge, non lascia residui. Adatta a pelli secche e sensibili.'),
+        ('Crema viso Neutrogena', 9.99, 100, 'Skincare', 'neutrogena-crema-viso.jpg', 'La Crema Viso Idratante Neutrogena è una crema viso idratante per pelli secche e sensibili. Arricchita con glicerina e vitamina E, questa crema viso idrata a fondo e protegge la pelle del viso. Non comedogenica, senza profumo. Adatta a pelli secche e sensibili.'),
+        ('Crema mani Vichy', 4.99, 100, 'Skincare', 'vichy-crema-mani.jpg', 'La Crema Mani Idratante Vichy è una crema mani idratante e protettiva per mani secche e screpolate. Arricchita con glicerina e vitamina, questa crema mani idrata a fondo e protegge la pelle delle mani. Non unge, non lascia residui. Adatta a pelli secche e sensibili.'),
+        ('Paracetamolo 500', 5.0, 100, 'Farmaci Generici', 'paracetamolo.jpg', 'Descrizione del prodotto Paracetamolo'),
+        ('Ibuprofene 400', 6.0, 100, 'Farmaci Generici', 'ibuprofene.jpg', 'Descrizione del prodotto Ibuprofene'),
+        ('Aspirina 100', 3.0, 100, 'Farmaci Generici', 'aspirina.jpg', 'Descrizione del prodotto Aspirina'),
+        ('Echinacea', 10.0, 100, 'Erboristeria', 'echinacea.jpg', 'Descrizione del prodotto Echinacea'),
+        ('Ginseng', 12.0, 100, 'Erboristeria', 'ginseng.jpg', 'Descrizione del prodotto Ginseng'),
+        ('Valeriana', 8.0, 100, 'Erboristeria', 'valeriana.jpg', 'Descrizione del prodotto Valeriana'),
+        ('Vitamina C', 15.0, 100, 'Integratori', 'vitamina-c.jpg', 'Descrizione del prodotto Vitamina C'),
+        ('Vitamina D', 18.0, 100, 'Integratori', 'vitamina-d.jpg', 'Descrizione del prodotto Vitamina D'),
+        ('Omega 3', 20.0, 100, 'Integratori', 'omega-3.jpg', 'Descrizione del prodotto Omega 3'),
+        ('Termometro', 30.0, 100, 'Prodotti Esposizione', 'prodotti-espositivi.jpg', 'Descrizione del prodotto Prodotti espositivi '),
+        ('Mascherine', 10.0, 100, 'Prodotti Esposizione', 'prodotti-espositivi.jpg', 'Descrizione del prodotto Prodotti espositivi '),
+        ('Gel disinfettante', 5.0, 100, 'Prodotti Esposizione', 'prodotti-espositivi.jpg', 'Descrizione del prodotto Prodotti espositivi ')
     `);
 
     // Inserimento ordini di esempio

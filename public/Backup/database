@@ -1,12 +1,12 @@
-CREATE TABLE "Carrello" (
-    "ID" INTEGER NOT NULL UNIQUE,
-    "EmailUtente" TEXT NOT NULL,  -- Collegato all'utente
-    "IDProdotto" INTEGER NOT NULL,  -- Prodotto aggiunto
-    "Quantita" INTEGER NOT NULL,  -- Quantità selezionata
-    PRIMARY KEY("ID" AUTOINCREMENT),
-    FOREIGN KEY("EmailUtente") REFERENCES "Utenti"("Email"),
-    FOREIGN KEY("IDProdotto") REFERENCES "Prodotti"("ID")
-);
+CREATE TABLE Carrello (
+        EmailUtente TEXT,
+        SessionID TEXT NOT NULL,
+        IDProdotto INTEGER NOT NULL,
+        Quantita INTEGER NOT NULL,
+        PRIMARY KEY(EmailUtente, SessionID, IDProdotto),
+        FOREIGN KEY(EmailUtente) REFERENCES Utenti(Email),
+        FOREIGN KEY(IDProdotto) REFERENCES Prodotti(ID)
+    );
 
 CREATE TABLE "DettagliOrdine" (
     "ID" INTEGER NOT NULL UNIQUE,

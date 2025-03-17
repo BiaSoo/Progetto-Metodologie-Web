@@ -9,6 +9,8 @@
     <title><%= product.Nome %> - BeSure Farmacia</title>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.8.1/font/bootstrap-icons.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
     
     <style>
         td {border-color:rgb(25, 143, 101);border-width: 1px;}
@@ -26,12 +28,13 @@
         <div class="container">
             <div class="row">
                 <div class="col-md-6">
-                    <img src="<%= product.image %>" width="100%" alt="<%= product.Nome %>">
+                    <img src="/images/prodotti/<%= product.Immagine %>" alt="<%= product.Nome %>">
                 </div>
                 <div class="col-md-6">
                     <h3>Prezzo: €<%= product.Prezzo %></h3>
                     <p>Categoria: <%= product.Categoria %></p>
                     <p>Descrizione: <%= product.Descrizione %></p>
+                    
                     <div class="d-flex align-items-center mt-3">
                         <button class="btn btn-outline-secondary" id="decrease-quantity">-</button>
                         <input type="number" id="quantity" class="form-control mx-2" value="1" min="1" style="width: 70px;" readonly>
@@ -44,56 +47,53 @@
         </div>
     </div>    
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const decreaseButton = document.getElementById('decrease-quantity');
-            const increaseButton = document.getElementById('increase-quantity');
-            const quantityInput = document.getElementById('quantity');
-            const addToCartButton = document.getElementById('add-to-cart');
-            const errorMessage = document.getElementById('error-message');
-            const productId = <%= product.ID %>; // Passa il valore come numero
-            const sessionId = "<%= sessionID %>";
+        $(document).ready(function() {
+            const productId = <%= JSON.stringify(product.ID) %>; // Assicuriamoci che l'ID prodotto sia definito
 
-            decreaseButton.addEventListener('click', () => {
-                const currentQuantity = parseInt(quantityInput.value, 10);
-                if (currentQuantity > 1) {
-                    quantityInput.value = currentQuantity - 1;
-                    errorMessage.style.display = 'none';
-                }
-            });
+            if (!productId) {
+                console.error('Errore: ID prodotto non definito.');
+                $('#error-message').text('Errore interno: ID prodotto non trovato.').show();
+                return;
+            }
 
-            increaseButton.addEventListener('click', () => {
-                quantityInput.value = parseInt(quantityInput.value, 10) + 1;
-                errorMessage.style.display = 'none';
-            });
+            $('#add-to-cart').click(function() {
+                const quantity = parseInt($('#quantity').val(), 10);
 
-            addToCartButton.addEventListener('click', async () => {
-                const quantity = parseInt(quantityInput.value, 10);
-                if (quantity < 1) {
-                    errorMessage.textContent = 'Impossibile inserire un articolo di quantità zero!';
-                    errorMessage.style.display = 'block';
+                if (isNaN(quantity) || quantity < 1) {
+                    $('#error-message').text('Impossibile inserire un articolo di quantità zero o non valida!').show();
                     return;
                 }
 
-                try {
-                    const response = await fetch('/aggiungi_al_carrello', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ productId, quantity, sessionId })
-                    });
-
-                    const result = await response.json();
-                    if (result.success) {
-                        alert('Prodotto aggiunto al carrello!');
-                    } else {
-                        errorMessage.textContent = result.message || 'Errore durante l\'aggiunta al carrello.';
-                        errorMessage.style.display = 'block';
+                $.ajax({
+                    url: '/aggiungi_al_carrello',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ productId: productId, quantity: quantity }),
+                    success: function(response) {
+                        if (response.success) {
+                            alert('Prodotto aggiunto al carrello!');
+                            $('#error-message').hide();
+                        } else {
+                            $('#error-message').text(response.message || 'Errore durante l\'aggiunta al carrello.').show();
+                        }
+                    },
+                    error: function() {
+                        $('#error-message').text('Errore durante l\'aggiunta al carrello.').show();
                     }
-                } catch (error) {
-                    errorMessage.textContent = 'Errore durante l\'aggiunta al carrello.';
-                    errorMessage.style.display = 'block';
+                });
+            });
+
+            $('#decrease-quantity').click(function() {
+                const currentQuantity = parseInt($('#quantity').val(), 10);
+                if (currentQuantity > 1) {
+                    $('#quantity').val(currentQuantity - 1);
+                    $('#error-message').hide();
                 }
+            });
+
+            $('#increase-quantity').click(function() {
+                $('#quantity').val(parseInt($('#quantity').val(), 10) + 1);
+                $('#error-message').hide();
             });
         });
     </script>

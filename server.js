@@ -31,6 +31,7 @@ app.set('views', path.join(__dirname, 'views'));
 // Serve i file statici dalla cartella 'public'
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json()); // middleware per analizzare il corpo delle richieste JSON
 
 // Configura il middleware per le sessioni
 app.use(session({
@@ -95,18 +96,25 @@ db.serialize(() => {
         FOREIGN KEY(IDProdotto) REFERENCES Prodotti(ID)
     )`);
 
-    // Hash della password dell'amministratore
-    bcrypt.hash('admin', saltRounds, (err, hash) => {
+    // Hash della password dell'amministratore e dell'utente
+    bcrypt.hash('admin', saltRounds, (err, adminHash) => {
         if (err) {
             console.error('Errore nell\'hashing della password admin:', err.message);
             return;
         }
 
-        // Inserimento utenti di esempio
-        db.run(`INSERT OR IGNORE INTO Utenti (Email, Password, Nome, Cognome, Indirizzo, NumeroDiTelefono, AccessoSpeciale) VALUES
-            ('admin@example.com', ?, 'Admin', 'User', 'Via Roma 1', '1234567890', 1),
-            ('user@example.com', '$2b$10$KIX/8Q1J1Q1J1Q1J1Q1J1u1J1Q1J1Q1J1Q1J1', 'User', 'Example', 'Via Milano 2', '0987654321', 0)
-        `, [hash]);
+        bcrypt.hash('1234', saltRounds, (err, userHash) => {
+            if (err) {
+                console.error('Errore nell\'hashing della password user:', err.message);
+                return;
+            }
+
+            // Inserimento utenti di esempio
+            db.run(`INSERT OR IGNORE INTO Utenti (Email, Password, Nome, Cognome, Indirizzo, NumeroDiTelefono, AccessoSpeciale) VALUES
+                ('admin@example.com', ?, 'Admin', 'User', 'Via Roma 1', '1234567890', 1),
+                ('user@example.com', ?, 'User', 'Example', 'Via Milano 2', '0987654321', 0)
+            `, [adminHash, userHash]);
+        });
     });
 
     // Inserimento prodotti di esempio
@@ -144,7 +152,23 @@ app.get('/catalogo', (req, res) => {
 
 // Route per la pagina del carrello
 app.get('/carrello', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'carrello.html'));
+    const emailUtente = req.session.user ? req.session.user.Email : null;
+    const sessionID = req.session.sessionID;
+
+    db.all(
+        `SELECT P.Nome, P.Prezzo, C.Quantita 
+         FROM Carrello C 
+         JOIN Prodotti P ON C.IDProdotto = P.ID 
+         WHERE (C.EmailUtente = ? OR C.SessionID = ?)`,
+        [emailUtente, sessionID],
+        (err, rows) => {
+            if (err) {
+                console.error('Errore nel recupero del carrello:', err.message);
+                return res.status(500).send('Errore interno del server.');
+            }
+            res.render('carrello', { cartItems: rows, user: req.session.user });
+        }
+    );
 });
 
 // Route dinamica per i dettagli del prodotto
@@ -313,6 +337,8 @@ app.post('/modifica_prodotto', upload.single('immagine'), (req, res) => {
     const { id, nome, prezzo, quantita, categoria } = req.body;
     const immagine = req.file ? `${req.file.filename}` : null; // Percorso relativo
 
+    console.log('Dati ricevuti:', req.body);
+
     const query = immagine
         ? 'UPDATE Prodotti SET Nome = ?, Prezzo = ?, Quantita = ?, Categoria = ?, Immagine = ? WHERE ID = ?'
         : 'UPDATE Prodotti SET Nome = ?, Prezzo = ?, Quantita = ?, Categoria = ? WHERE ID = ?';
@@ -381,13 +407,13 @@ app.get('/prodotti_esposizione', (req, res) => {
     res.render('prodotti_esposizione', { user: req.session.user });
 });
 
-app.post('/aggiungi_al_carrello', (req, res) => {
+app.post('/aggiungi_al_carrello', async (req, res) => {
     const { productId, quantity } = req.body;
 
-    console.log(`ID prodotto ricevuto: ${productId}`); 
+    console.log('Dati ricevuti:', { productId, quantity }); // Log dettagliato dei dati ricevuti
 
-    if (!productId || isNaN(productId)) {
-        console.error('ID prodotto non valido o non definito.');
+    if (!productId || isNaN(Number(productId))) {
+        console.error('ID prodotto non valido o undefined:', productId); // Log più dettagliato
         return res.status(400).json({ success: false, message: 'ID prodotto non valido.' });
     }
 
@@ -395,18 +421,20 @@ app.post('/aggiungi_al_carrello', (req, res) => {
         return res.json({ success: false, message: 'Impossibile inserire un articolo di quantità zero!' });
     }
 
-    db.get('SELECT ID, Quantita FROM Prodotti WHERE ID = ?', [productId], (err, row) => {
-        if (err) {
-            console.error('Errore nel controllo della quantità:', err.message);
-            return res.status(500).json({ success: false, message: 'Errore interno del server.' });
-        }
+    try {
+        const row = await new Promise((resolve, reject) => {
+            db.get('SELECT Quantita FROM Prodotti WHERE ID = ?', [Number(productId)], (err, row) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(row);
+                }
+            });
+        });
 
         if (!row) {
-            console.error(`Prodotto con ID ${productId} non trovato nel database.`);
             return res.json({ success: false, message: 'Prodotto non trovato.' });
         }
-
-        console.log(`Prodotto trovato: ID=${row.ID}, Quantita disponibile=${row.Quantita}`);
 
         if (row.Quantita < quantity) {
             return res.json({ success: false, message: 'Quantità non disponibile in magazzino.' });
@@ -415,30 +443,40 @@ app.post('/aggiungi_al_carrello', (req, res) => {
         const emailUtente = req.session.user ? req.session.user.Email : null;
         const sessionID = req.session.sessionID;
 
-        db.run(
-            `INSERT INTO Carrello (EmailUtente, SessionID, IDProdotto, Quantita) 
-             VALUES (?, ?, ?, ?) 
-             ON CONFLICT(EmailUtente, SessionID, IDProdotto) 
-             DO UPDATE SET Quantita = Quantita + ?`,
-            [emailUtente, sessionID, productId, quantity, quantity],
-            (err) => {
-                if (err) {
-                    console.error('Errore nell\'aggiunta al carrello:', err.message);
-                    return res.status(500).json({ success: false, message: 'Errore interno del server.' });
-                }
-
-                db.run('UPDATE Prodotti SET Quantita = Quantita - ? WHERE ID = ?', [quantity, productId], (err) => {
+        await new Promise((resolve, reject) => {
+            db.run(
+                `INSERT INTO Carrello (EmailUtente, SessionID, IDProdotto, Quantita) 
+                 VALUES (?, ?, ?, ?) 
+                 ON CONFLICT(EmailUtente, SessionID, IDProdotto) 
+                 DO UPDATE SET Quantita = Quantita + ?`,
+                [emailUtente, sessionID, Number(productId), quantity, quantity],
+                (err) => {
                     if (err) {
-                        console.error('Errore nell\'aggiornamento della quantità:', err.message);
-                        return res.status(500).json({ success: false, message: 'Errore interno del server.' });
+                        reject(err);
+                    } else {
+                        resolve();
                     }
+                }
+            );
+        });
 
-                    res.json({ success: true, message: 'Prodotto aggiunto al carrello!' });
-                });
-            }
-        );
-    });
+        await new Promise((resolve, reject) => {
+            db.run('UPDATE Prodotti SET Quantita = Quantita - ? WHERE ID = ?', [quantity, Number(productId)], (err) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve();
+                }
+            });
+        });
+
+        res.json({ success: true, message: 'Prodotto aggiunto al carrello!' });
+    } catch (err) {
+        console.error('Errore durante l\'aggiunta al carrello:', err);
+        res.status(500).json({ success: false, message: 'Errore interno del server.' });
+    }
 });
+
 
 app.listen(port, () => {
     console.log(`Server in ascolto su http://localhost:${port}`);

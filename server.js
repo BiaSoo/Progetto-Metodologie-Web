@@ -352,7 +352,7 @@ app.get('/area_riservata', isAdmin, (req, res) => {
 
 app.post('/modifica_prodotto', upload.single('immagine'), (req, res) => {
     const { id, nome, prezzo, quantita, categoria } = req.body;
-    const immagine = req.file ? `${req.file.filename}` : null; // Percorso relativo
+    const immagine = req.file ? `${req.file.filename}` : null; 
 
     console.log('Dati ricevuti:', req.body);
 
@@ -405,23 +405,48 @@ app.get('/ricerca', (req, res) => {
 
 // Route per le altre pagine
 app.get('/skincare', (req, res) => {
-    res.render('skincare', { user: req.session.user });
+    db.all('SELECT * FROM Prodotti WHERE Categoria = ? AND Disponibile = 1', ['Skincare'], (err, rows) => {
+        if (err) {
+            return res.status(500).send('Errore nel recupero dei prodotti Skincare');
+        }
+        res.render('skincare', { products: rows, user: req.session.user });
+    });
 });
 
 app.get('/farmaci_generici', (req, res) => {
-    res.render('farmaci_generici', { user: req.session.user });
+    db.all('SELECT * FROM Prodotti WHERE Categoria = ? AND Disponibile = 1', ['Farmaci Generici'], (err, rows) => {
+        if (err) {
+            return res.status(500).send('Errore nel recupero dei prodotti Farmaci Generici');
+        }
+        res.render('farmaci_generici', { products: rows, user: req.session.user });
+    });
 });
 
 app.get('/erboristeria', (req, res) => {
-    res.render('erboristeria', { user: req.session.user });
+    db.all('SELECT * FROM Prodotti WHERE Categoria = ? AND Disponibile = 1', ['Erboristeria'], (err, rows) => {
+        if (err) {
+            return res.status(500).send('Errore nel recupero dei prodotti Erboristeria');
+        }
+        res.render('erboristeria', { products: rows, user: req.session.user });
+    });
 });
 
 app.get('/integratori', (req, res) => {
-    res.render('integratori', { user: req.session.user });
+    db.all('SELECT * FROM Prodotti WHERE Categoria = ? AND Disponibile = 1', ['Integratori'], (err, rows) => {
+        if (err) {
+            return res.status(500).send('Errore nel recupero dei prodotti Integratori');
+        }
+        res.render('integratori', { products: rows, user: req.session.user });
+    });
 });
 
 app.get('/prodotti_esposizione', (req, res) => {
-    res.render('prodotti_esposizione', { user: req.session.user });
+    db.all('SELECT * FROM Prodotti WHERE Categoria = ? AND Disponibile = 1', ['Prodotti Esposizione'], (err, rows) => {
+        if (err) {
+            return res.status(500).send('Errore nel recupero dei prodotti Prodotti Esposizione');
+        }
+        res.render('prodotti_esposizione', { products: rows, user: req.session.user });
+    });
 });
 
 app.post('/aggiungi_al_carrello', async (req, res) => {

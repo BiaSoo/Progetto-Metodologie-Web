@@ -136,6 +136,7 @@ body {
     border-radius: 5px;
     overflow: hidden;
     transition: all 0.3s ease; 
+    height: 400px; /* Altezza fissa per tutte le card */
 }
 
 .card:hover {
@@ -150,6 +151,10 @@ body {
 
 .card-body {
     padding: 15px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: calc(100% - 200px); /* Altezza rimanente dopo l'immagine */
 }
 
 .card-title {
@@ -160,6 +165,11 @@ body {
 .card-text {
     font-size: 1rem;
     color: #666666;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 3; /* Mostra massimo 3 righe */
+    -webkit-box-orient: vertical;
 }
 
 .card .btn {
@@ -167,24 +177,13 @@ body {
     border: 1px solid #28a745; 
     background-color: #ffffff; 
     transition: all 0.3s ease; 
+    align-self: flex-start;
 }
 
 .card .btn:hover {
     color: #ffffff; 
     background-color: #007bff; 
     border-color: #007bff; 
-}
-
-/* Stile per la pagina del carrello */
-#carrello-body tr {
-    border-bottom: 1px solid #e0e0e0;
-}
-
-#totale-carrello {
-    font-size: 1.5rem;
-    font-weight: bold;
-    text-align: right;
-    margin-top: 20px;
 }
 
 /* Stile per i form di accesso e registrazione */

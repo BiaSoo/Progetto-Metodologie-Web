@@ -74,25 +74,30 @@ db.serialize(() => {
     )`);
 
     db.run(`CREATE TABLE IF NOT EXISTS Ordini (
-        ID INTEGER NOT NULL UNIQUE,
+        ID_Ordine INTEGER NOT NULL UNIQUE,
         EmailUtente TEXT NOT NULL,
         Indirizzo TEXT NOT NULL,
         NumeroDiTelefono TEXT NOT NULL,
         Data TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        IDProdotto INTEGER NOT NULL,
+        Quantita INTEGER NOT NULL,
         Totale REAL NOT NULL,
         PRIMARY KEY(ID AUTOINCREMENT),
         FOREIGN KEY(EmailUtente) REFERENCES Utenti(Email),
         FOREIGN KEY(Indirizzo) REFERENCES Utenti(Indirizzo),
-        FOREIGN KEY(NumeroDiTelefono) REFERENCES Utenti(NumeroDiTelefono)
+        FOREIGN KEY(NumeroDiTelefono) REFERENCES Utenti(NumeroDiTelefono),
+        FOREIGN KEY(IDProdotto) REFERENCES Prodotti(ID)
     )`);
 
-    db.run(`CREATE TABLE IF NOT EXISTS Carrello (
-        EmailUtente TEXT,
-        SessionID TEXT NOT NULL,
-        IDProdotto INTEGER NOT NULL,
-        Quantita INTEGER NOT NULL,
-        PRIMARY KEY(EmailUtente, SessionID, IDProdotto),
-        FOREIGN KEY(EmailUtente) REFERENCES Utenti(Email),
+
+    db.run(`CREATE TABLE IF NOT EXISTS DettagliOrdine (
+        ID INTEGER NOT NULL UNIQUE,
+       
+        IDProdotto INTEGER NOT NULL,  -- Collegato al prodotto
+        Quantita INTEGER NOT NULL,  -- Quantità del prodotto nell'ordine
+        PrezzoUnitario REAL NOT NULL,  -- Prezzo al momento dell'acquisto
+        PRIMARY KEY(ID AUTOINCREMENT),
+        
         FOREIGN KEY(IDProdotto) REFERENCES Prodotti(ID)
     )`);
 

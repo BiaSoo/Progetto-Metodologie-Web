@@ -519,6 +519,10 @@ app.post('/aggiungi_al_carrello', async (req, res) => {
     }
 });
 
+app.get('/contatti', (req, res) => {
+    res.render('contatti', { user: req.session.user });
+});
+
 
 app.listen(port, () => {
     console.log(`Server in ascolto su http://localhost:${port}`);

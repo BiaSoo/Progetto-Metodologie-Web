@@ -9,47 +9,96 @@
     <link href="https://getbootstrap.com/docs/5.3/assets/css/docs.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.8.1/font/bootstrap-icons.min.css">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
-
 </head>
 <body class="<%= cartItems.length > 20 ? '' : 'carrello-fixed-footer' %>">
     <%- include('navbar', { user: user }) %>
-    <div class="container mt-5">
-        <h2>Il tuo carrello</h2>
+    <div class="container-fluid">
+        <h2 class="text-center">Il tuo carrello</h2>
         <% if (cartItems.length > 0) { %>
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Prodotto</th>
-                        <th>Prezzo</th>
-                        <th>Quantità</th>
-                        <th>Totale</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% let total = 0; %>
-                    <% cartItems.forEach(item => { %>
-                        <% total += item.Prezzo * item.Quantita; %>
+            <form action="/aggiorna_carrello" method="POST" class="tabella-carrello w-100">
+                <table class="table table-hover">
+                    <thead>
                         <tr>
-                            <td><%= item.Nome %></td>
-                            <td>€<%= item.Prezzo %></td>
-                            <td><%= item.Quantita %></td>
-                            <td>€<%= (item.Prezzo * item.Quantita).toFixed(2) %></td>
+                            <th>Immagine</th>
+                            <th>Prodotto</th>
+                            <th>Prezzo</th>
+                            <th>Quantità</th>
+                            <th>Totale</th>
+                            <th>Rimuovi</th>
                         </tr>
-                    <% }) %>
-                </tbody>
-            </table>
-            <div class="total-container">
-                Totale: €<%= total.toFixed(2) %>
-            </div>
-            <div class="order-button">
-                <button class="btn btn-success">Effettua Ordine</button>
-            </div>
+                    </thead>
+                    <tbody>
+                        <% let total = 0; %>
+                        <% cartItems.forEach(item => { %>
+                            <% total += item.Prezzo * item.Quantita; %>
+                            <tr>
+                                <td class="text-center">
+                                    <img src="/images/prodotti/<%= item.Immagine %>" class="img-fluid" style="max-width: 100px; height: auto;">
+                                </td>
+                                <td><%= item.Nome %></td>
+                                <td>€<%= item.Prezzo %></td>
+                                <td>
+                                    <input type="number" name="quantita[<%= item.ID_Prodotto %>]" value="<%= item.Quantita %>" min="1" max="<%= item.Disponibilita %>" class="form-control form-control-sm input-quantita" style="width: 150px;">    
+                                </td>   
+                                <td>€<%= (item.Prezzo * item.Quantita).toFixed(2) %></td>
+                                <td>
+                                    <button type="submit" name="rimuovi" value="<%= item.ID_Prodotto %>" class="btn btn-sm btn-danger">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+                <div class="total-container text-end">
+                    Totale: €<%= total.toFixed(2) %>
+                </div>
+                <div class="order-button text-center mt-4">
+                    <% if (user) { %>
+                        <form id="orderForm" action="/effettua_ordine" method="POST" class="d-inline">
+                            <button type="submit" class="btn btn-success btn-order">Effettua Ordine</button>
+                        </form>
+                    <% } else { %>
+                        <a href="/accesso" class="btn btn-primary btn-order">Accedi per effettuare l'ordine</a>
+                    <% } %>
+                </div>
+            </form>
         <% } else { %>
-            <p>Il carrello è vuoto.</p>
+            <p class="text-center">Il carrello è vuoto.</p>
         <% } %>
     </div>
     <%- include('footer') %>
+    <script>
+        document.querySelectorAll('input[name^="quantita"]').forEach(input => {
+            input.addEventListener('change', function () {
+                const productId = this.name.match(/\d+/)[0];
+                const quantity = this.value;
+
+                fetch('/update_quantity', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ id: productId, quantity: quantity })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        console.log(`Quantità aggiornata per il prodotto ID ${productId}: ${quantity}`);
+                        location.reload(); // Ricarica la pagina per aggiornare il totale
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(error => console.error('Errore durante l\'aggiornamento della quantità:', error));
+            });
+        });
+
+        document.getElementById('orderForm')?.addEventListener('submit', function (e) {
+            if (!confirm('Sei sicuro di voler effettuare l\'ordine?')) {
+                e.preventDefault();
+            }
+        });
+    </script>
 </body>
 </html>

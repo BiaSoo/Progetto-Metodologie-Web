@@ -233,6 +233,7 @@ form button {
     padding: 10px;
     border-radius: 5px;
 }
+/* Stile per il footer */
 
 /* Stile per il divisorio verticale */
 .vertical-divider {
@@ -244,8 +245,8 @@ form button {
 }
 
 .vertical-divider-tall {
-    height: 40px; /* Altezza maggiore rispetto agli altri divisori */
-    background-color: #aaa; /* Puoi personalizzare il colore se necessario */
+    height: 40px; 
+    background-color: #aaa; 
 }
 
 /* Stile per il footer */
@@ -292,7 +293,59 @@ body.carrello-fixed-footer .footer{
     font-size: 1.5rem;
     font-weight: bold;
 }
-.order-button {
-    margin-top: 10px;
-    text-align: right;
+
+/* Stile per le immagini nel carrello */
+.img-thumbnail {
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 5px;
+    background-color: #f8f9fa;  
+}
+
+/* Stile per il form che contiene la tabella del carrello */
+.tabella-carrello {
+    max-width: 1000px;
+    padding: 20px;
+    border: none; 
+    border-radius: 5px;
+    background-color: #ffffff;
+}
+
+/* Stile per la tabella del carrello */
+.tabella-carrello .table {
+    border-collapse: collapse;
+}   
+
+.tabella-carrello .table thead th,
+.tabella-carrello .table tbody tr td {
+    border: none; 
+    text-align: center;
+    vertical-align: middle;
+}
+
+.tabella-carrello .table tbody td .input-quantita {
+    max-width: 100px;
+    text-align: left;
+    padding: 5px;
+    font-size: 0.9rem;
+    align-self: right;
+}
+
+/* Stile per il bottone Effettua Ordine */
+.btn-order {
+    width: auto; 
+    padding: 10px 20px; 
+    font-size: 1rem;
+    border-radius: 5px;
+    display: inline-block;
+}
+
+/* Stile per il campo di input della quantità */
+.input-quantita {
+    width: 80px; 
+    text-align-last: center; 
+    padding: 5px; 
+    font-size: 0.9rem; 
+    margin: 0 auto; 
+    display: block; 
 }

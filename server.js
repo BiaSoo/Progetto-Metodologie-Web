@@ -79,27 +79,26 @@ db.serialize(() => {
         Indirizzo TEXT NOT NULL,
         NumeroDiTelefono TEXT NOT NULL,
         Data TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        IDProdotto INTEGER NOT NULL,
+        ID_Prodotto INTEGER NOT NULL,
         Quantita INTEGER NOT NULL,
         Totale REAL NOT NULL,
-        PRIMARY KEY(ID AUTOINCREMENT),
+        PRIMARY KEY(ID_Ordine AUTOINCREMENT),
         FOREIGN KEY(EmailUtente) REFERENCES Utenti(Email),
         FOREIGN KEY(Indirizzo) REFERENCES Utenti(Indirizzo),
         FOREIGN KEY(NumeroDiTelefono) REFERENCES Utenti(NumeroDiTelefono),
-        FOREIGN KEY(IDProdotto) REFERENCES Prodotti(ID)
+        FOREIGN KEY(ID_Prodotto) REFERENCES Prodotti(ID)
     )`);
 
-
-    db.run(`CREATE TABLE IF NOT EXISTS DettagliOrdine (
-        ID INTEGER NOT NULL UNIQUE,
-       
-        IDProdotto INTEGER NOT NULL,  -- Collegato al prodotto
-        Quantita INTEGER NOT NULL,  -- Quantità del prodotto nell'ordine
-        PrezzoUnitario REAL NOT NULL,  -- Prezzo al momento dell'acquisto
-        PRIMARY KEY(ID AUTOINCREMENT),
-        
-        FOREIGN KEY(IDProdotto) REFERENCES Prodotti(ID)
+    db.run(`CREATE TABLE IF NOT EXISTS Carrello (
+        EmailUtente TEXT,
+        SessionID TEXT NOT NULL,
+        ID_Prodotto INTEGER NOT NULL,
+        Quantita INTEGER NOT NULL,
+        PRIMARY KEY(EmailUtente, SessionID, ID_Prodotto),
+        FOREIGN KEY(EmailUtente) REFERENCES Utenti(Email),
+        FOREIGN KEY(ID_Prodotto) REFERENCES Prodotti(ID)
     )`);
+
 
     // Hash della password dell'amministratore e dell'utente
     bcrypt.hash('admin', saltRounds, (err, adminHash) => {
@@ -149,8 +148,12 @@ db.serialize(() => {
     `);
 
     // Inserimento ordini di esempio
-    db.run(`INSERT OR IGNORE INTO Ordini (EmailUtente, Indirizzo, NumeroDiTelefono, Totale) VALUES
-        ('user@example.com', 'Via Milano 2', '0987654321', 30.0)
+    db.run(`INSERT OR IGNORE INTO Ordini (EmailUtente, Indirizzo, NumeroDiTelefono, ID_Prodotto, Quantita, Totale) VALUES
+        ('user@example.com', 'Via Milano 2', '0987654321', 1, 2, 40.0),
+        ('user@example.com', 'Via Milano 2', '0987654321', 2, 1, 20.0),
+        ('user@example.com', 'Via Milano 2', '0987654321', 3, 3, 60.0),
+        ('admin@example.com', 'Via Roma 1', '1234567890', 4, 1, 13.69),
+        ('admin@example.com', 'Via Roma 1', '1234567890', 5, 2, 25.98)
     `);
 });
 
@@ -180,9 +183,9 @@ app.get('/carrello', (req, res) => {
     const sessionID = req.session.sessionID;
 
     db.all(
-        `SELECT P.Nome, P.Prezzo, C.Quantita 
+        `SELECT P.Nome, P.Prezzo, P.Immagine, C.Quantita, C.ID_Prodotto 
          FROM Carrello C 
-         JOIN Prodotti P ON C.IDProdotto = P.ID 
+         JOIN Prodotti P ON C.ID_Prodotto = P.ID 
          WHERE (C.EmailUtente = ? OR C.SessionID = ?)`,
         [emailUtente, sessionID],
         (err, rows) => {
@@ -494,9 +497,9 @@ app.post('/aggiungi_al_carrello', async (req, res) => {
 
         await new Promise((resolve, reject) => {
             db.run(
-                `INSERT INTO Carrello (EmailUtente, SessionID, IDProdotto, Quantita) 
+                `INSERT INTO Carrello (EmailUtente, SessionID, ID_Prodotto, Quantita) 
                  VALUES (?, ?, ?, ?) 
-                 ON CONFLICT(EmailUtente, SessionID, IDProdotto) 
+                 ON CONFLICT(EmailUtente, SessionID, ID_Prodotto) 
                  DO UPDATE SET Quantita = Quantita + ?`,
                 [emailUtente, sessionID, Number(productId), quantity, quantity],
                 (err) => {
@@ -526,11 +529,219 @@ app.post('/aggiungi_al_carrello', async (req, res) => {
     }
 });
 
+// Funzione helper per aggiornare o rimuovere un prodotto dal carrello
+function updateCart(emailUtente, sessionID, idProdotto, nuovaQuantita) {
+    return new Promise((resolve, reject) => {
+        if (nuovaQuantita > 0) {
+            db.run(
+                `UPDATE Carrello SET Quantita = ? WHERE (EmailUtente = ? OR SessionID = ?) AND ID_Prodotto = ?`,
+                [nuovaQuantita, emailUtente, sessionID, idProdotto],
+                (err) => {
+                    if (err) reject(err);
+                    else {
+                        console.log(`Quantità aggiornata: Prodotto ID ${idProdotto}, Nuova Quantità: ${nuovaQuantita}`);
+                        resolve();
+                    }
+                }
+            );
+        } else {
+            db.run(
+                `DELETE FROM Carrello WHERE (EmailUtente = ? OR SessionID = ?) AND ID_Prodotto = ?`,
+                [emailUtente, sessionID, idProdotto],
+                (err) => {
+                    if (err) reject(err);
+                    else {
+                        console.log(`Prodotto rimosso dal carrello: ID ${idProdotto}`);
+                        resolve();
+                    }
+                }
+            );
+        }
+    });
+}
+
+// Route per aggiornare la quantità di un prodotto nel carrello
+app.post('/update_quantity', (req, res) => {
+    const { id, quantity } = req.body;
+
+    if (!id || isNaN(quantity) || quantity <= 0) {
+        return res.status(400).json({ success: false, message: 'ID o quantità non validi.' });
+    }
+
+    const emailUtente = req.session.user ? req.session.user.Email : null;
+    const sessionID = req.session.sessionID;
+
+    db.get(
+        `SELECT P.Prezzo 
+         FROM Carrello C 
+         JOIN Prodotti P ON C.ID_Prodotto = P.ID 
+         WHERE (C.EmailUtente = ? OR C.SessionID = ?) AND C.ID_Prodotto = ?`,
+        [emailUtente, sessionID, id],
+        (err, row) => {
+            if (err) {
+                console.error('Errore nel recupero del prodotto:', err.message);
+                return res.status(500).json({ success: false, message: 'Errore interno del server.' });
+            }
+
+            if (!row) {
+                return res.status(404).json({ success: false, message: 'Prodotto non trovato nel carrello.' });
+            }
+
+            updateCart(emailUtente, sessionID, id, quantity)
+                .then(() => {
+                    const newTotal = row.Prezzo * quantity;
+                    console.log(`Totale aggiornato per il prodotto ID ${id}: €${newTotal.toFixed(2)}`);
+                    res.json({ success: true, newTotal });
+                })
+                .catch((err) => {
+                    console.error('Errore nell\'aggiornamento della quantità:', err.message);
+                    res.status(500).json({ success: false, message: 'Errore interno del server.' });
+                });
+        }
+    );
+});
+
+// Route per rimuovere un prodotto dal carrello
+app.post('/remove_item', (req, res) => {
+    const { id } = req.body;
+
+    if (!id) {
+        return res.status(400).json({ success: false, message: 'ID non valido.' });
+    }
+
+    const emailUtente = req.session.user ? req.session.user.Email : null;
+    const sessionID = req.session.sessionID;
+
+    updateCart(emailUtente, sessionID, id, 0)
+        .then(() => res.json({ success: true }))
+        .catch((err) => {
+            console.error('Errore nella rimozione del prodotto:', err.message);
+            res.status(500).json({ success: false, message: 'Errore interno del server.' });
+        });
+});
+
+// Route per aggiornare il carrello
+app.post('/aggiorna_carrello', (req, res) => {
+    const emailUtente = req.session.user ? req.session.user.Email : null;
+    const sessionID = req.session.sessionID;
+
+    if (req.body.rimuovi) {
+        const idProdotto = req.body.rimuovi;
+        updateCart(emailUtente, sessionID, idProdotto, 0)
+            .then(() => res.redirect('/carrello'))
+            .catch((err) => {
+                console.error('Errore nella rimozione del prodotto:', err.message);
+                res.status(500).send('Errore interno del server.');
+            });
+    } else if (req.body.quantita) {
+        const quantitaAggiornate = req.body.quantita;
+        const updatePromises = Object.keys(quantitaAggiornate).map((idProdotto) => {
+            const nuovaQuantita = parseInt(quantitaAggiornate[idProdotto]);
+            return updateCart(emailUtente, sessionID, idProdotto, nuovaQuantita);
+        });
+
+        Promise.all(updatePromises)
+            .then(() => res.redirect('/carrello'))
+            .catch((err) => {
+                console.error('Errore durante l\'aggiornamento del carrello:', err.message);
+                res.status(500).send('Errore interno del server.');
+            });
+    } else {
+        res.redirect('/carrello');
+    }
+});
+
+// Route per effettuare l'ordine
+app.post('/effettua_ordine', isAuthenticated, (req, res) => {
+    const emailUtente = req.session.user.Email;
+
+    db.all(
+        `SELECT C.ID_Prodotto, C.Quantita, P.Prezzo, P.Quantita AS Disponibilita
+         FROM Carrello C 
+         JOIN Prodotti P ON C.ID_Prodotto = P.ID 
+         WHERE C.EmailUtente = ?`,
+        [emailUtente],
+        (err, cartItems) => {
+            if (err) {
+                console.error('Errore nel recupero del carrello:', err.message);
+                return res.status(500).send('Errore interno del server.');
+            }
+
+            if (cartItems.length === 0) {
+                console.log('Carrello vuoto, impossibile effettuare l\'ordine.');
+                return res.redirect('/carrello');
+            }
+
+            // Controlla la disponibilità dei prodotti
+            const prodottiNonDisponibili = cartItems.filter(item => item.Quantita > item.Disponibilita);
+            if (prodottiNonDisponibili.length > 0) {
+                console.log('Prodotti non disponibili:', prodottiNonDisponibili);
+                return res.status(400).send('Alcuni prodotti non sono più disponibili nella quantità richiesta.');
+            }
+
+            const ordinePromises = cartItems.map(item => {
+                const totale = item.Prezzo * item.Quantita;
+                return new Promise((resolve, reject) => {
+                    db.run(
+                        `INSERT INTO Ordini (EmailUtente, Indirizzo, NumeroDiTelefono, ID_Prodotto, Quantita, Totale) 
+                         VALUES (?, ?, ?, ?, ?, ?)`,
+                        [emailUtente, req.session.user.Indirizzo, req.session.user.NumeroDiTelefono, item.ID_Prodotto, item.Quantita, totale],
+                        (err) => {
+                            if (err) reject(err);
+                            else {
+                                console.log(`Ordine creato: Prodotto ID ${item.ID_Prodotto}, Quantità: ${item.Quantita}, Totale: €${totale.toFixed(2)}`);
+                                resolve();
+                            }
+                        }
+                    );
+                });
+            });
+
+            Promise.all(ordinePromises)
+                .then(() => {
+                    // Aggiorna le quantità dei prodotti in magazzino
+                    const updatePromises = cartItems.map(item => {
+                        return new Promise((resolve, reject) => {
+                            db.run(
+                                `UPDATE Prodotti SET Quantita = Quantita - ? WHERE ID = ?`,
+                                [item.Quantita, item.ID_Prodotto],
+                                (err) => {
+                                    if (err) reject(err);
+                                    else {
+                                        console.log(`Quantità aggiornata in magazzino: Prodotto ID ${item.ID_Prodotto}, Rimaste: ${item.Disponibilita - item.Quantita}`);
+                                        resolve();
+                                    }
+                                }
+                            );
+                        });
+                    });
+
+                    return Promise.all(updatePromises);
+                })
+                .then(() => {
+                    // Svuota il carrello
+                    db.run('DELETE FROM Carrello WHERE EmailUtente = ?', [emailUtente], (err) => {
+                        if (err) {
+                            console.error('Errore nello svuotamento del carrello:', err.message);
+                            return res.status(500).send('Errore interno del server.');
+                        }
+                        console.log('Carrello svuotato dopo l\'ordine.');
+                        res.redirect('/mio_account');
+                    });
+                })
+                .catch(err => {
+                    console.error('Errore nella creazione dell\'ordine:', err.message);
+                    res.status(500).send('Errore interno del server.');
+                });
+        }
+    );
+});
+
 app.get('/contatti', (req, res) => {
     res.render('contatti', { user: req.session.user });
 });
 
-
-app.listen(port, () => {
-    console.log(`Server in ascolto su http://localhost:${port}`);
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Server in esecuzione su http://localhost:${PORT}`);
 });

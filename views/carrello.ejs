@@ -55,11 +55,9 @@
                 </div>
                 <div class="order-button text-center mt-4">
                     <% if (user) { %>
-                        <form id="orderForm" action="/effettua_ordine" method="POST" class="d-inline">
-                            <button type="submit" class="btn btn-success btn-order">Effettua Ordine</button>
-                        </form>
+                        <button id="checkoutButton" class="btn btn-success btn-order">Checkout</button>
                     <% } else { %>
-                        <a href="/accesso" class="btn btn-primary btn-order">Accedi per effettuare l'ordine</a>
+                        <a href="/accesso" class="btn btn-primary btn-order" onclick="console.log('Reindirizzamento alla pagina di accesso');">Accedi per effettuare l'ordine</a>
                     <% } %>
                 </div>
             </form>
@@ -94,10 +92,11 @@
             });
         });
 
-        document.getElementById('orderForm')?.addEventListener('submit', function (e) {
-            if (!confirm('Sei sicuro di voler effettuare l\'ordine?')) {
-                e.preventDefault();
-            }
+        // Gestione del bottone Checkout
+        document.getElementById('checkoutButton')?.addEventListener('click', function (event) {
+            event.preventDefault(); // Previene il comportamento predefinito
+            console.log('Reindirizzamento alla pagina di checkout...');
+            window.location.href = '/checkout'; // Reindirizza alla pagina di checkout
         });
     </script>
 </body>

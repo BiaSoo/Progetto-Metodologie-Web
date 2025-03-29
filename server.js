@@ -651,16 +651,71 @@ app.post('/aggiorna_carrello', (req, res) => {
     }
 });
 
-// Route per effettuare l'ordine
-app.post('/effettua_ordine', isAuthenticated, (req, res) => {
-    const emailUtente = req.session.user.Email;
+//Pagina di checkout
+app.get('/checkout', (req, res) => {
+    const emailUtente = req.session.user ? req.session.user.Email : null;
+    const sessionID = req.session.sessionID;
 
     db.all(
-        `SELECT C.ID_Prodotto, C.Quantita, P.Prezzo, P.Quantita AS Disponibilita
+        `SELECT C.ID_Prodotto, C.Quantita, P.Prezzo, P.Nome 
          FROM Carrello C 
          JOIN Prodotti P ON C.ID_Prodotto = P.ID 
-         WHERE C.EmailUtente = ?`,
-        [emailUtente],
+         WHERE (C.EmailUtente = ? OR C.SessionID = ?)`,
+        [emailUtente, sessionID],
+        (err, cartItems) => {
+            if (err) {
+                console.error('Errore nel recupero del carrello:', err.message);
+                return res.status(500).send('Errore interno del server.');
+            }
+
+            let totale = 0;
+            cartItems.forEach(item => {
+                totale += item.Prezzo * item.Quantita;
+            });
+
+            if (emailUtente) {
+                db.get(
+                    `SELECT Indirizzo, NumeroDiTelefono FROM Utenti WHERE Email = ?`,
+                    [emailUtente],
+                    (err, userInfo) => {
+                        if (err) {
+                            console.error('Errore nel recupero dei dati utente:', err.message);
+                            return res.status(500).send('Errore interno del server.');
+                        }
+
+                        res.render('checkout', {
+                            cartItems,
+                            total: totale,
+                            user: req.session.user,
+                            indirizzo: userInfo ? userInfo.Indirizzo : '',
+                            telefono: userInfo ? userInfo.NumeroDiTelefono : ''
+                        });
+                    }
+                );
+            } else {
+                res.render('checkout', {
+                    cartItems,
+                    total: totale,
+                    user: req.session.user,
+                    indirizzo: '',
+                    telefono: ''
+                });
+            }
+        }
+    );
+});
+
+app.post('/checkout', (req, res) => {
+    const emailUtente = req.session.user ? req.session.user.Email : null;
+    const sessionID = req.session.sessionID;
+    const { indirizzo, telefono, metodoPagamento } = req.body;
+
+    db.all(
+        `SELECT C.ID_Prodotto, C.Quantita, P.Prezzo 
+         FROM Carrello C 
+         JOIN Prodotti P ON C.ID_Prodotto = P.ID 
+         WHERE (C.EmailUtente = ? OR C.SessionID = ?)`,
+        [emailUtente, sessionID],
         (err, cartItems) => {
             if (err) {
                 console.error('Errore nel recupero del carrello:', err.message);
@@ -668,75 +723,79 @@ app.post('/effettua_ordine', isAuthenticated, (req, res) => {
             }
 
             if (cartItems.length === 0) {
-                console.log('Carrello vuoto, impossibile effettuare l\'ordine.');
                 return res.redirect('/carrello');
             }
 
-            // Controlla la disponibilità dei prodotti
-            const prodottiNonDisponibili = cartItems.filter(item => item.Quantita > item.Disponibilita);
-            if (prodottiNonDisponibili.length > 0) {
-                console.log('Prodotti non disponibili:', prodottiNonDisponibili);
-                return res.status(400).send('Alcuni prodotti non sono più disponibili nella quantità richiesta.');
-            }
+            let totale = 0;
+            const ordiniPromises = cartItems.map(item => {
+                totale += item.Prezzo * item.Quantita;
 
-            const ordinePromises = cartItems.map(item => {
-                const totale = item.Prezzo * item.Quantita;
                 return new Promise((resolve, reject) => {
+                    // Inserisci l'ordine nel database
                     db.run(
                         `INSERT INTO Ordini (EmailUtente, Indirizzo, NumeroDiTelefono, ID_Prodotto, Quantita, Totale) 
                          VALUES (?, ?, ?, ?, ?, ?)`,
-                        [emailUtente, req.session.user.Indirizzo, req.session.user.NumeroDiTelefono, item.ID_Prodotto, item.Quantita, totale],
-                        (err) => {
-                            if (err) reject(err);
-                            else {
-                                console.log(`Ordine creato: Prodotto ID ${item.ID_Prodotto}, Quantità: ${item.Quantita}, Totale: €${totale.toFixed(2)}`);
-                                resolve();
-                            }
+                        [emailUtente, indirizzo, telefono, item.ID_Prodotto, item.Quantita, item.Prezzo * item.Quantita],
+                        function (err) {
+                            if (err) return reject(err);
+
+                            // Stampa il riepilogo dell'ordine nella console
+                            console.log(`Ordine confermato: 
+                                Numero Ordine: ${this.lastID}, 
+                                Utente: ${emailUtente || 'Utente non registrato'}, 
+                                Prodotto ID: ${item.ID_Prodotto}, 
+                                Quantità: ${item.Quantita}, 
+                                Totale: €${(item.Prezzo * item.Quantita).toFixed(2)}`);
+
+                            // Aggiorna la quantità del prodotto nel database
+                            db.run(
+                                `UPDATE Prodotti SET Quantita = Quantita - ? WHERE ID = ?`,
+                                [item.Quantita, item.ID_Prodotto],
+                                (err) => {
+                                    if (err) return reject(err);
+
+                                    resolve(this.lastID); // Restituisci l'ID dell'ordine
+                                }
+                            );
                         }
                     );
                 });
             });
 
-            Promise.all(ordinePromises)
-                .then(() => {
-                    // Aggiorna le quantità dei prodotti in magazzino
-                    const updatePromises = cartItems.map(item => {
-                        return new Promise((resolve, reject) => {
-                            db.run(
-                                `UPDATE Prodotti SET Quantita = Quantita - ? WHERE ID = ?`,
-                                [item.Quantita, item.ID_Prodotto],
-                                (err) => {
-                                    if (err) reject(err);
-                                    else {
-                                        console.log(`Quantità aggiornata in magazzino: Prodotto ID ${item.ID_Prodotto}, Rimaste: ${item.Disponibilita - item.Quantita}`);
-                                        resolve();
-                                    }
-                                }
-                            );
-                        });
-                    });
+            Promise.all(ordiniPromises)
+                .then((orderIds) => {
+                    const lastOrderId = orderIds[orderIds.length - 1]; // Ottieni l'ultimo ID ordine
 
-                    return Promise.all(updatePromises);
-                })
-                .then(() => {
-                    // Svuota il carrello
-                    db.run('DELETE FROM Carrello WHERE EmailUtente = ?', [emailUtente], (err) => {
-                        if (err) {
-                            console.error('Errore nello svuotamento del carrello:', err.message);
-                            return res.status(500).send('Errore interno del server.');
+                    // Rimuovi i prodotti dal carrello
+                    db.run(
+                        `DELETE FROM Carrello WHERE (EmailUtente = ? OR SessionID = ?)`,
+                        [emailUtente, sessionID],
+                        (err) => {
+                            if (err) {
+                                console.error('Errore nella pulizia del carrello:', err.message);
+                                return res.status(500).send('Errore interno del server.');
+                            }
+
+                            // Reindirizza alla pagina di conferma ordine con il numero dell'ordine
+                            res.redirect(`/conferma_ordine?orderNumber=${lastOrderId}`);
                         }
-                        console.log('Carrello svuotato dopo l\'ordine.');
-                        res.redirect('/mio_account');
-                    });
+                    );
                 })
-                .catch(err => {
-                    console.error('Errore nella creazione dell\'ordine:', err.message);
+                .catch((err) => {
+                    console.error('Errore durante la conferma dell\'ordine:', err.message);
                     res.status(500).send('Errore interno del server.');
                 });
         }
     );
 });
 
+// Route per la pagina di conferma ordine
+app.get('/conferma_ordine', (req, res) => {
+    const orderNumber = req.query.orderNumber || 'N/A'; 
+    res.render('conferma_ordine', { orderNumber, user: req.user });
+});
+
+// Route per la pagina dei contatti
 app.get('/contatti', (req, res) => {
     res.render('contatti', { user: req.session.user });
 });

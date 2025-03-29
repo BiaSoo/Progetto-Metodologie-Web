@@ -254,7 +254,8 @@ body.login .footer,
 body.register .footer,
 body.prodotto .footer,
 body.mio_account .footer,
-body.contatti .footer{
+body.contatti .footer,
+body.conferma_ordine .footer{
     position: fixed;
     bottom: 0;
     width: 100%;

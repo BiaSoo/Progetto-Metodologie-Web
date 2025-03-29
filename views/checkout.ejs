@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="/css/style.css">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Checkout - BeSure Farmacia</title>
+</head>
+<body>
+    <%- include('navbar', { user: user }) %>
+    <div class="container mt-5">
+        <h2 class="text-center">Checkout</h2>
+        <form action="/checkout" method="POST">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Prodotto</th>
+                        <th>Prezzo</th>
+                        <th>Quantità</th>
+                        <th>Totale</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% cartItems.forEach(item => { %>
+                        <tr>
+                            <td><%= item.Nome %></td>
+                            <td>€<%= item.Prezzo.toFixed(2) %></td>
+                            <td><%= item.Quantita %></td>
+                            <td>€<%= (item.Prezzo * item.Quantita).toFixed(2) %></td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+            <div class="text-end">
+                <h4>Totale: €<%= total.toFixed(2) %></h4>
+            </div>
+            <div class="mt-4">
+                <h5>Dati di Spedizione</h5>
+                <div class="mb-3">
+                    <label for="indirizzo" class="form-label">Indirizzo</label>
+                    <input type="text" class="form-control" id="indirizzo" name="indirizzo" value="<%= indirizzo %>" required>
+                </div>
+                <div class="mb-3">
+                    <label for="telefono" class="form-label">Numero di Telefono</label>
+                    <input type="text" class="form-control" id="telefono" name="telefono" value="<%= telefono %>" required>
+                </div>
+            </div>
+            <div class="mt-4">
+                <h5>Metodo di Pagamento</h5>
+                <div class="mb-3">
+                    <label for="metodoPagamento" class="form-label">Metodo</label>
+                    <select class="form-select" id="metodoPagamento" name="metodoPagamento" required>
+                        <option value="carta">Carta di Credito</option>
+                        <option value="paypal">PayPal</option>
+                        <option value="bonifico">Bonifico Bancario</option>
+                    </select>
+                </div>
+            </div>
+            <div class="text-center mt-4">
+                <button type="submit" class="btn btn-success">Conferma Ordine</button>
+            </div>
+        </form>
+    </div>
+    <%- include('footer') %>
+</body>
+</html>

@@ -11,17 +11,41 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.8.1/font/bootstrap-icons.min.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
 </head>
-<body class="mio_account">
+<body class="mio_account <%= ordini.length > 2 ? '' : 'order-fixed-footer' %>">
     <%- include('navbar', { user: user }) %>
 
     <div class="container">
-        <h1>Il mio account</h1>
-        <p><strong>Nome:</strong> <%= user.Nome %></p>
-        <p><strong>Cognome:</strong> <%= user.Cognome %></p>
-        <p><strong>Email:</strong> <%= user.Email %></p>
-        <p><strong>Indirizzo:</strong> <%= user.Indirizzo %></p>
-        <p><strong>Numero di telefono:</strong> <%= user.NumeroDiTelefono %></p>
-        <a href="/modifica_account" class="btn btn-primary">Modifica i tuoi dettagli</a>
+        <div class="row">
+            <!-- Dati utente -->
+            <div class="col-md-6">
+                <h1>Il tuo account:</h1>
+                <p><strong>Nome:</strong> <%= user.Nome %></p>
+                <p><strong>Cognome:</strong> <%= user.Cognome %></p>
+                <p><strong>Email:</strong> <%= user.Email %></p>
+                <p><strong>Indirizzo:</strong> <%= user.Indirizzo %></p>
+                <p><strong>Numero di telefono:</strong> <%= user.NumeroDiTelefono %></p>
+                <a href="/modifica_account" class="btn btn-primary">Modifica i tuoi dettagli</a>
+            </div>
+
+            <!-- Ordini effettuati -->
+            <div class="col-md-6">
+                <h1>I tuoi ordini:</h1>
+                <% if (ordini.length > 0) { %>
+                    <ul class="list-group">
+                        <% ordini.forEach(ordine => { %>
+                            <li class="list-group-item">
+                                <p><strong>ID Ordine:</strong> <%= ordine.ID_Ordine %></p>
+                                <p><strong>Data:</strong> <%= ordine.Data %></p>
+                                <p><strong>Totale:</strong> €<%= ordine.Totale.toFixed(2) %></p>
+                                <a href="/dettagli_ordine/<%= ordine.ID_Ordine %>" class="btn btn-info">Dettagli ordine</a>
+                            </li>
+                        <% }); %>
+                    </ul>
+                <% } else { %>
+                    <p>Non hai effettuato ordini.</p>
+                <% } %>
+            </div>
+        </div>
     </div>
     <%- include('footer') %>
 </body>

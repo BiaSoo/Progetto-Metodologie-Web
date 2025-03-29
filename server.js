@@ -399,7 +399,68 @@ function isAuthenticated(req, res, next) {
 
 // Route per la pagina del mio account
 app.get('/mio_account', isAuthenticated, (req, res) => {
-    res.render('mio_account', { user: req.session.user });
+    const email = req.session.user.Email;
+
+    // Recupera gli ordini dell'utente
+    db.all(
+        `SELECT ID_Ordine, Data, Totale 
+         FROM Ordini 
+         WHERE EmailUtente = ? 
+         ORDER BY Data DESC`,
+        [email],
+        (err, ordini) => {
+            if (err) {
+                console.error('Errore nel recupero degli ordini:', err.message);
+                return res.status(500).send('Errore interno del server.');
+            }
+
+            res.render('mio_account', { user: req.session.user, ordini });
+        }
+    );
+});
+
+// Rotta per la pagina di modifica account
+app.get('/modifica_account', isAuthenticated, (req, res) => {
+    const email = req.session.user.Email; // Recupera l'email dell'utente dalla sessione
+
+    db.get('SELECT * FROM Utenti WHERE Email = ?', [email], (err, user) => {
+        if (err) {
+            console.error('Errore nel recupero dei dati utente:', err.message);
+            return res.status(500).send('Errore interno del server.');
+        }
+
+        if (!user) {
+            return res.status(404).send('Utente non trovato.');
+        }
+
+        res.render('modfica_account', { user }); // Passa i dati dell'utente alla vista
+    });
+});
+
+// Rotta per aggiornare i dati dell'account
+app.post('/updateAccount', isAuthenticated, (req, res) => {
+    const { Nome, Cognome, Email, Indirizzo, NumeroDiTelefono } = req.body;
+    const currentEmail = req.session.user.Email; // Email dell'utente loggato
+
+    // Aggiorna i dati dell'utente nel database
+    db.run(
+        `UPDATE Utenti 
+         SET Nome = ?, Cognome = ?, Email = ?, Indirizzo = ?, NumeroDiTelefono = ? 
+         WHERE Email = ?`,
+        [Nome, Cognome, Email, Indirizzo, NumeroDiTelefono, currentEmail],
+        (err) => {
+            if (err) {
+                console.error('Errore nell\'aggiornamento dei dati utente:', err.message);
+                return res.status(500).send('Errore interno del server.');
+            }
+
+            // Aggiorna i dati nella sessione
+            req.session.user = { Nome, Cognome, Email, Indirizzo, NumeroDiTelefono };
+
+            // Reindirizza alla pagina "mio account"
+            res.redirect('/mio_account');
+        }
+    );
 });
 
 // Route per la ricerca dei prodotti
@@ -793,6 +854,32 @@ app.post('/checkout', (req, res) => {
 app.get('/conferma_ordine', (req, res) => {
     const orderNumber = req.query.orderNumber || 'N/A'; 
     res.render('conferma_ordine', { orderNumber, user: req.user });
+});
+
+// Route per la pagina dei dettagli dell'ordine
+app.get('/dettagli_ordine/:id', isAuthenticated, (req, res) => {
+    const ordineId = req.params.id;
+
+    db.all(
+        `SELECT P.Nome, P.Prezzo, O.Quantita, (P.Prezzo * O.Quantita) AS Subtotale 
+         FROM Ordini O 
+         JOIN Prodotti P ON O.ID_Prodotto = P.ID 
+         WHERE O.ID_Ordine = ?`,
+        [ordineId],
+        (err, prodotti) => {
+            if (err) {
+                console.error('Errore nel recupero dei dettagli dell\'ordine:', err.message);
+                return res.status(500).send('Errore interno del server.');
+            }
+
+            if (prodotti.length === 0) {
+                return res.status(404).send('Ordine non trovato.');
+            }
+
+            // Passa anche la variabile `user` alla vista
+            res.render('dettagli_ordine', { prodotti, ordineId, user: req.session.user });
+        }
+    );
 });
 
 // Route per la pagina dei contatti

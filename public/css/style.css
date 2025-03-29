@@ -253,9 +253,9 @@ form button {
 body.login .footer,
 body.register .footer,
 body.prodotto .footer,
-body.mio_account .footer,
 body.contatti .footer,
-body.conferma_ordine .footer{
+body.conferma_ordine .footer,
+body.dettagli_ordine .footer{
     position: fixed;
     bottom: 0;
     width: 100%;
@@ -268,7 +268,8 @@ body.integratori .footer,
 body.farmaci_generici .footer,
 body.prodotti_espozione .footer,
 body.erboristeria .footer,
-body.carrello .footer{
+body.carrello .footer,
+body.dettagli_ordine .footer{
     display: flex;
     bottom: 0;
     width: 100%;
@@ -281,7 +282,8 @@ body.integratori-fixed-footer .footer,
 body.farmaci_generici-fixed-footer .footer,
 body.prodotti_esposizione-fixed-footer .footer,
 body.erboristeria-fixed-footer .footer,
-body.carrello-fixed-footer .footer{
+body.carrello-fixed-footer .footer,
+body.order-fixed-footer .footer{
     position: fixed;
     bottom: 0;
     width: 100%;

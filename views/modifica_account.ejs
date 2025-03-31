@@ -14,17 +14,17 @@
 <body class="modifica_account">
     <%- include('navbar', { user: user }) %>
 
-    <div class="container">
-        <h1>Modifica il tuo account:</h1>
-        <form action="/updateAccount" method="POST" class="needs-validation" novalidate>
+    <div class="container text-center">
+        <h1 class="mt-4">Modifica il tuo account:</h1>
+        <form action="/modifica_account" method="POST" class="needs-validation" novalidate>
             <div class="mb-3">
                 <label for="nome" class="form-label"><strong>Nome:</strong></label>
-                <input type="text" class="form-control" id="nome" name="Nome" value="<%= user.Nome %>" required>
+                <input type="text" class="form-control" id="nome" name="nome" value="<%= user.Nome %>" required>
                 <div class="invalid-feedback">Il nome è obbligatorio.</div>
             </div>
             <div class="mb-3">
                 <label for="cognome" class="form-label"><strong>Cognome:</strong></label>
-                <input type="text" class="form-control" id="cognome" name="Cognome" value="<%= user.Cognome %>" required>
+                <input type="text" class="form-control" id="cognome" name="cognome" value="<%= user.Cognome %>" required>
                 <div class="invalid-feedback">Il cognome è obbligatorio.</div>
             </div>
             <div class="mb-3">
@@ -34,12 +34,12 @@
             </div>
             <div class="mb-3">
                 <label for="indirizzo" class="form-label"><strong>Indirizzo:</strong></label>
-                <input type="text" class="form-control" id="indirizzo" name="Indirizzo" value="<%= user.Indirizzo %>" required>
+                <input type="text" class="form-control" id="indirizzo" name="indirizzo" value="<%= user.Indirizzo %>" required>
                 <div class="invalid-feedback">L'indirizzo è obbligatorio.</div>
             </div>
             <div class="mb-3">
                 <label for="numeroDiTelefono" class="form-label"><strong>Numero di telefono:</strong></label>
-                <input type="tel" class="form-control" id="numeroDiTelefono" name="NumeroDiTelefono" value="<%= user.NumeroDiTelefono %>" required>
+                <input type="tel" class="form-control" id="numeroDiTelefono" name="numero_di_telefono" value="<%= user.NumeroDiTelefono %>" required>
                 <div class="invalid-feedback">Il numero di telefono è obbligatorio.</div>
             </div>
             <button type="submit" class="btn btn-primary">Salva cambiamenti</button>

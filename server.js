@@ -79,13 +79,18 @@ db.serialize(() => {
         Indirizzo TEXT NOT NULL,
         NumeroDiTelefono TEXT NOT NULL,
         Data TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        ID_Prodotto INTEGER NOT NULL,
-        Quantita INTEGER NOT NULL,
         Totale REAL NOT NULL,
         PRIMARY KEY(ID_Ordine AUTOINCREMENT),
-        FOREIGN KEY(EmailUtente) REFERENCES Utenti(Email),
-        FOREIGN KEY(Indirizzo) REFERENCES Utenti(Indirizzo),
-        FOREIGN KEY(NumeroDiTelefono) REFERENCES Utenti(NumeroDiTelefono),
+        FOREIGN KEY(EmailUtente) REFERENCES Utenti(Email)
+    )`);
+
+    db.run(`CREATE TABLE IF NOT EXISTS Dettagli_Ordine (
+        ID INTEGER NOT NULL UNIQUE,
+        ID_Ordine INTEGER NOT NULL,
+        ID_Prodotto INTEGER NOT NULL,
+        Quantita INTEGER NOT NULL,
+        PRIMARY KEY(ID AUTOINCREMENT),
+        FOREIGN KEY(ID_Ordine) REFERENCES Ordini(ID_Ordine),
         FOREIGN KEY(ID_Prodotto) REFERENCES Prodotti(ID)
     )`);
 
@@ -145,15 +150,6 @@ db.serialize(() => {
         ('Termometro', 30.0, 100, 'Prodotti Esposizione', 'prodotti-espositivi.jpg', 'Descrizione del prodotto Prodotti espositivi '),
         ('Mascherine', 10.0, 100, 'Prodotti Esposizione', 'prodotti-espositivi.jpg', 'Descrizione del prodotto Prodotti espositivi '),
         ('Gel disinfettante', 5.0, 100, 'Prodotti Esposizione', 'prodotti-espositivi.jpg', 'Descrizione del prodotto Prodotti espositivi ')
-    `);
-
-    // Inserimento ordini di esempio
-    db.run(`INSERT OR IGNORE INTO Ordini (EmailUtente, Indirizzo, NumeroDiTelefono, ID_Prodotto, Quantita, Totale) VALUES
-        ('user@example.com', 'Via Milano 2', '0987654321', 1, 2, 40.0),
-        ('user@example.com', 'Via Milano 2', '0987654321', 2, 1, 20.0),
-        ('user@example.com', 'Via Milano 2', '0987654321', 3, 3, 60.0),
-        ('admin@example.com', 'Via Roma 1', '1234567890', 4, 1, 13.69),
-        ('admin@example.com', 'Via Roma 1', '1234567890', 5, 2, 25.98)
     `);
 });
 
@@ -399,15 +395,11 @@ function isAuthenticated(req, res, next) {
 
 // Route per la pagina del mio account
 app.get('/mio_account', isAuthenticated, (req, res) => {
-    const email = req.session.user.Email;
+    const emailUtente = req.session.user.Email;
 
-    // Recupera gli ordini dell'utente
     db.all(
-        `SELECT ID_Ordine, Data, Totale 
-         FROM Ordini 
-         WHERE EmailUtente = ? 
-         ORDER BY Data DESC`,
-        [email],
+        `SELECT * FROM Ordini WHERE EmailUtente = ? ORDER BY Data DESC`,
+        [emailUtente],
         (err, ordini) => {
             if (err) {
                 console.error('Errore nel recupero degli ordini:', err.message);
@@ -419,45 +411,30 @@ app.get('/mio_account', isAuthenticated, (req, res) => {
     );
 });
 
-// Rotta per la pagina di modifica account
+// Route per la pagina di modifica account
 app.get('/modifica_account', isAuthenticated, (req, res) => {
-    const email = req.session.user.Email; // Recupera l'email dell'utente dalla sessione
-
-    db.get('SELECT * FROM Utenti WHERE Email = ?', [email], (err, user) => {
-        if (err) {
-            console.error('Errore nel recupero dei dati utente:', err.message);
-            return res.status(500).send('Errore interno del server.');
-        }
-
-        if (!user) {
-            return res.status(404).send('Utente non trovato.');
-        }
-
-        res.render('modfica_account', { user }); // Passa i dati dell'utente alla vista
-    });
+    res.render('modifica_account', { user: req.session.user });
 });
 
-// Rotta per aggiornare i dati dell'account
-app.post('/updateAccount', isAuthenticated, (req, res) => {
-    const { Nome, Cognome, Email, Indirizzo, NumeroDiTelefono } = req.body;
-    const currentEmail = req.session.user.Email; // Email dell'utente loggato
+app.post('/modifica_account', isAuthenticated, (req, res) => {
+    const { nome, cognome, indirizzo, numero_di_telefono } = req.body;
+    const email = req.session.user.Email;
 
-    // Aggiorna i dati dell'utente nel database
     db.run(
-        `UPDATE Utenti 
-         SET Nome = ?, Cognome = ?, Email = ?, Indirizzo = ?, NumeroDiTelefono = ? 
-         WHERE Email = ?`,
-        [Nome, Cognome, Email, Indirizzo, NumeroDiTelefono, currentEmail],
+        `UPDATE Utenti SET Nome = ?, Cognome = ?, Indirizzo = ?, NumeroDiTelefono = ? WHERE Email = ?`,
+        [nome, cognome, indirizzo, numero_di_telefono, email],
         (err) => {
             if (err) {
-                console.error('Errore nell\'aggiornamento dei dati utente:', err.message);
+                console.error('Errore durante la modifica dei dettagli utente:', err.message);
                 return res.status(500).send('Errore interno del server.');
             }
 
             // Aggiorna i dati nella sessione
-            req.session.user = { Nome, Cognome, Email, Indirizzo, NumeroDiTelefono };
+            req.session.user.Nome = nome;
+            req.session.user.Cognome = cognome;
+            req.session.user.Indirizzo = indirizzo;
+            req.session.user.NumeroDiTelefono = numero_di_telefono;
 
-            // Reindirizza alla pagina "mio account"
             res.redirect('/mio_account');
         }
     );
@@ -788,64 +765,66 @@ app.post('/checkout', (req, res) => {
             }
 
             let totale = 0;
-            const ordiniPromises = cartItems.map(item => {
+            cartItems.forEach(item => {
                 totale += item.Prezzo * item.Quantita;
-
-                return new Promise((resolve, reject) => {
-                    // Inserisci l'ordine nel database
-                    db.run(
-                        `INSERT INTO Ordini (EmailUtente, Indirizzo, NumeroDiTelefono, ID_Prodotto, Quantita, Totale) 
-                         VALUES (?, ?, ?, ?, ?, ?)`,
-                        [emailUtente, indirizzo, telefono, item.ID_Prodotto, item.Quantita, item.Prezzo * item.Quantita],
-                        function (err) {
-                            if (err) return reject(err);
-
-                            // Stampa il riepilogo dell'ordine nella console
-                            console.log(`Ordine confermato: 
-                                Numero Ordine: ${this.lastID}, 
-                                Utente: ${emailUtente || 'Utente non registrato'}, 
-                                Prodotto ID: ${item.ID_Prodotto}, 
-                                Quantità: ${item.Quantita}, 
-                                Totale: €${(item.Prezzo * item.Quantita).toFixed(2)}`);
-
-                            // Aggiorna la quantità del prodotto nel database
-                            db.run(
-                                `UPDATE Prodotti SET Quantita = Quantita - ? WHERE ID = ?`,
-                                [item.Quantita, item.ID_Prodotto],
-                                (err) => {
-                                    if (err) return reject(err);
-
-                                    resolve(this.lastID); // Restituisci l'ID dell'ordine
-                                }
-                            );
-                        }
-                    );
-                });
             });
 
-            Promise.all(ordiniPromises)
-                .then((orderIds) => {
-                    const lastOrderId = orderIds[orderIds.length - 1]; // Ottieni l'ultimo ID ordine
+            db.run(
+                `INSERT INTO Ordini (EmailUtente, Indirizzo, NumeroDiTelefono, Totale) 
+                 VALUES (?, ?, ?, ?)`,
+                [emailUtente, indirizzo, telefono, totale],
+                function (err) {
+                    if (err) {
+                        console.error('Errore durante l\'inserimento dell\'ordine:', err.message);
+                        return res.status(500).send('Errore interno del server.');
+                    }
 
-                    // Rimuovi i prodotti dal carrello
-                    db.run(
-                        `DELETE FROM Carrello WHERE (EmailUtente = ? OR SessionID = ?)`,
-                        [emailUtente, sessionID],
-                        (err) => {
-                            if (err) {
-                                console.error('Errore nella pulizia del carrello:', err.message);
-                                return res.status(500).send('Errore interno del server.');
-                            }
+                    const orderId = this.lastID;
 
-                            // Reindirizza alla pagina di conferma ordine con il numero dell'ordine
-                            res.redirect(`/conferma_ordine?orderNumber=${lastOrderId}`);
-                        }
-                    );
-                })
-                .catch((err) => {
-                    console.error('Errore durante la conferma dell\'ordine:', err.message);
-                    res.status(500).send('Errore interno del server.');
-                });
+                    const dettagliPromises = cartItems.map(item => {
+                        return new Promise((resolve, reject) => {
+                            db.run(
+                                `INSERT INTO Dettagli_Ordine (ID_Ordine, ID_Prodotto, Quantita) 
+                                 VALUES (?, ?, ?)`,
+                                [orderId, item.ID_Prodotto, item.Quantita],
+                                (err) => {
+                                    if (err) reject(err);
+                                    else resolve();
+                                }
+                            );
+                        });
+                    });
+
+                    Promise.all(dettagliPromises)
+                        .then(() => {
+                            // Log riepilogo ordine
+                            console.log(`Ordine effettuato da utente: ${emailUtente || 'Utente non registrato'}`);
+                            console.log('Prodotti:');
+                            cartItems.forEach(item => {
+                                console.log(`- ID Prodotto: ${item.ID_Prodotto}, Quantità: ${item.Quantita}`);
+                            });
+                            console.log(`Totale ordine: €${totale.toFixed(2)}`);
+                            console.log(`Numero ordine: ${orderId}`);
+
+                            db.run(
+                                `DELETE FROM Carrello WHERE (EmailUtente = ? OR SessionID = ?)`,
+                                [emailUtente, sessionID],
+                                (err) => {
+                                    if (err) {
+                                        console.error('Errore nella pulizia del carrello:', err.message);
+                                        return res.status(500).send('Errore interno del server.');
+                                    }
+
+                                    res.redirect(`/conferma_ordine?orderNumber=${orderId}`);
+                                }
+                            );
+                        })
+                        .catch((err) => {
+                            console.error('Errore durante l\'inserimento dei dettagli ordine:', err.message);
+                            res.status(500).send('Errore interno del server.');
+                        });
+                }
+            );
         }
     );
 });
@@ -853,33 +832,7 @@ app.post('/checkout', (req, res) => {
 // Route per la pagina di conferma ordine
 app.get('/conferma_ordine', (req, res) => {
     const orderNumber = req.query.orderNumber || 'N/A'; 
-    res.render('conferma_ordine', { orderNumber, user: req.user });
-});
-
-// Route per la pagina dei dettagli dell'ordine
-app.get('/dettagli_ordine/:id', isAuthenticated, (req, res) => {
-    const ordineId = req.params.id;
-
-    db.all(
-        `SELECT P.Nome, P.Prezzo, O.Quantita, (P.Prezzo * O.Quantita) AS Subtotale 
-         FROM Ordini O 
-         JOIN Prodotti P ON O.ID_Prodotto = P.ID 
-         WHERE O.ID_Ordine = ?`,
-        [ordineId],
-        (err, prodotti) => {
-            if (err) {
-                console.error('Errore nel recupero dei dettagli dell\'ordine:', err.message);
-                return res.status(500).send('Errore interno del server.');
-            }
-
-            if (prodotti.length === 0) {
-                return res.status(404).send('Ordine non trovato.');
-            }
-
-            // Passa anche la variabile `user` alla vista
-            res.render('dettagli_ordine', { prodotti, ordineId, user: req.session.user });
-        }
-    );
+    res.render('conferma_ordine', { orderNumber, user: req.session.user });
 });
 
 // Route per la pagina dei contatti

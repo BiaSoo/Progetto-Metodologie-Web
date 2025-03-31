@@ -255,7 +255,8 @@ body.register .footer,
 body.prodotto .footer,
 body.contatti .footer,
 body.conferma_ordine .footer,
-body.dettagli_ordine .footer{
+body.dettagli_ordine .footer,
+body.modifica_account .footer{
     position: fixed;
     bottom: 0;
     width: 100%;
@@ -287,6 +288,17 @@ body.order-fixed-footer .footer{
     position: fixed;
     bottom: 0;
     width: 100%;
+}
+
+/* Stile per il footer nella pagina checkout */
+body.checkout .footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+}
+
+body.checkout-fixed-footer .footer {
+    position: static;
 }
 
 /*carrello*/
@@ -351,4 +363,10 @@ body.order-fixed-footer .footer{
     font-size: 0.9rem; 
     margin: 0 auto; 
     display: block; 
+}
+
+/* Stile per il titolo nella pagina modifica account */
+body.modifica_account h1 {
+    text-align: center;
+    margin-top: 20px;
 }

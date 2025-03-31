@@ -835,6 +835,33 @@ app.get('/conferma_ordine', (req, res) => {
     res.render('conferma_ordine', { orderNumber, user: req.session.user });
 });
 
+// Route per i dettagli di un ordine
+app.get('/dettagli_ordine/:id', isAuthenticated, (req, res) => {
+    const ordineId = req.params.id;
+
+    db.all(
+        `SELECT P.Nome, P.Prezzo, DO.Quantita, (P.Prezzo * DO.Quantita) AS Subtotale
+         FROM Dettagli_Ordine DO
+         JOIN Prodotti P ON DO.ID_Prodotto = P.ID
+         WHERE DO.ID_Ordine = ?`,
+        [ordineId],
+        (err, prodotti) => {
+            if (err) {
+                console.error('Errore nel recupero dei dettagli ordine:', err.message);
+                return res.status(500).send('Errore interno del server.');
+            }
+
+            if (prodotti.length === 0) {
+                return res.status(404).send('Dettagli ordine non trovati.');
+            }
+
+            const totaleOrdine = prodotti.reduce((totale, prodotto) => totale + prodotto.Subtotale, 0);
+
+            res.render('dettagli_ordine', { ordineId, prodotti, totaleOrdine, user: req.session.user });
+        }
+    );
+});
+
 // Route per la pagina dei contatti
 app.get('/contatti', (req, res) => {
     res.render('contatti', { user: req.session.user });

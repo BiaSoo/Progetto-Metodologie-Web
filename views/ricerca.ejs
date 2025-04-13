@@ -52,6 +52,17 @@
 
             <!-- Risultati della ricerca -->
             <div class="col-md-9">
+                <!-- Dropdown per ordinamento -->
+                <div class="d-flex justify-content-end mb-3">
+                    <select id="sortOrder" class="form-select w-auto">
+                        <option value="relevance" <%= sortOrder === 'relevance' ? 'selected' : '' %>>Rilevanza</option>
+                        <option value="name_asc" <%= sortOrder === 'name_asc' ? 'selected' : '' %>>A-Z</option>
+                        <option value="name_desc" <%= sortOrder === 'name_desc' ? 'selected' : '' %>>Z-A</option>
+                        <option value="price_asc" <%= sortOrder === 'price_asc' ? 'selected' : '' %>>Prezzo crescente</option>
+                        <option value="price_desc" <%= sortOrder === 'price_desc' ? 'selected' : '' %>>Prezzo decrescente</option>
+                    </select>
+                </div>
+
                 <div class="row">
                     <% if (products.length > 0) { %>
                         <% products.forEach(product => { %>
@@ -81,14 +92,20 @@
             const maxPrice = document.getElementById('priceRange').value;
             const selectedCategories = Array.from(document.querySelectorAll('input[type="checkbox"]:checked'))
                 .map(checkbox => checkbox.value);
+            const sortOrder = document.getElementById('sortOrder').value;
 
             const params = new URLSearchParams({
                 query: "<%= query %>",
                 maxPrice,
-                categories: selectedCategories.join(',')
+                categories: selectedCategories.join(','),
+                sortOrder
             });
 
             window.location.href = `/ricerca?${params.toString()}`;
+        });
+
+        document.getElementById('sortOrder').addEventListener('change', () => {
+            document.getElementById('applyFilters').click();
         });
     </script>
 </body>

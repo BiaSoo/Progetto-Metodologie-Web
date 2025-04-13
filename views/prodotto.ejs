@@ -35,12 +35,17 @@
                     <p>Categoria: <%= product.Categoria %></p>
                     <hr>
                     <p>Descrizione: <%= product.Descrizione %></p>
-                    <div class="d-flex align-items-center mt-3">
-                        <button class="btn btn-outline-secondary" id="decrease-quantity">-</button>
-                        <input type="number" id="quantity" class="form-control mx-2" value="1" min="1" style="width: 70px;" readonly>
-                        <button class="btn btn-outline-secondary" id="increase-quantity">+</button>
-                    </div>
-                    <button class="btn btn-success mt-3" id="add-to-cart">Aggiungi al carrello</button>
+                    <% if (!user || user.Email !== 'admin@example.com') { %>
+                        <div class="d-flex align-items-center mt-3">
+                            <button class="btn btn-outline-secondary" id="decrease-quantity">-</button>
+                            <input type="number" id="quantity" class="form-control mx-2" value="1" min="1" style="width: 70px;" readonly>
+                            <button class="btn btn-outline-secondary" id="increase-quantity">+</button>
+                        </div>
+                        <button class="btn btn-success mt-3" id="add-to-cart">Aggiungi al carrello</button>
+                    <% } %>
+                    <% if (user && user.Email !== 'admin@example.com') { %>
+                        <button class="btn btn-warning mt-3" id="add-to-wishlist">Aggiungi alla Wishlist</button>
+                    <% } %>
                     <p id="error-message" class="text-danger mt-2" style="display: none;"></p>
                 </div>
             </div>
@@ -79,6 +84,33 @@
                     },
                     error: function() {
                         $('#error-message').text('Errore durante l\'aggiunta al carrello.').show();
+                    }
+                });
+            });
+
+            $('#add-to-wishlist').click(function() {
+                const quantity = parseInt($('#quantity').val(), 10);
+
+                if (isNaN(quantity) || quantity < 1) {
+                    $('#error-message').text('Impossibile inserire un articolo di quantità zero o non valida!').show();
+                    return;
+                }
+
+                $.ajax({
+                    url: '/aggiungi_wishlist',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ productId: productId, quantity: quantity }),
+                    success: function(response) {
+                        if (response.success) {
+                            alert('Prodotto aggiunto alla wishlist!');
+                            $('#error-message').hide();
+                        } else {
+                            $('#error-message').text(response.message || 'Errore durante l\'aggiunta alla wishlist.').show();
+                        }
+                    },
+                    error: function() {
+                        $('#error-message').text('Errore durante l\'aggiunta alla wishlist.').show();
                     }
                 });
             });

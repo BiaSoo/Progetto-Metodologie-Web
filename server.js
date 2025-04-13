@@ -104,6 +104,16 @@ db.serialize(() => {
         FOREIGN KEY(ID_Prodotto) REFERENCES Prodotti(ID)
     )`);
 
+    db.run(`CREATE TABLE IF NOT EXISTS Wishlist (
+        EmailUtente TEXT,
+        SessionID TEXT NOT NULL,
+        ID_Prodotto INTEGER NOT NULL,
+        Quantita INTEGER NOT NULL DEFAULT 1,
+        PRIMARY KEY(EmailUtente, SessionID, ID_Prodotto),
+        FOREIGN KEY(EmailUtente) REFERENCES Utenti(Email),
+        FOREIGN KEY(ID_Prodotto) REFERENCES Prodotti(ID)
+    )`);
+
 
     // Hash della password dell'amministratore e dell'utente
     bcrypt.hash('admin', saltRounds, (err, adminHash) => {
@@ -347,6 +357,14 @@ function isAdmin(req, res, next) {
     res.redirect('/accesso_riservato');
 }
 
+// Middleware per verificare se l'utente è loggato e non è admin
+function isAuthenticatedAndNotAdmin(req, res, next) {
+    if (req.session.user && req.session.user.Email !== 'admin@example.com') {
+        return next();
+    }
+    res.redirect('/accesso');
+}
+
 // Route per la pagina area riservata
 app.get('/area_riservata', isAdmin, (req, res) => {
     db.all('SELECT * FROM Prodotti', (err, rows) => {
@@ -444,9 +462,10 @@ app.post('/modifica_account', isAuthenticated, (req, res) => {
 
 // Route per la ricerca dei prodotti
 app.get('/ricerca', (req, res) => {
-    const query = req.query.query ? req.query.query.trim() : ''; // Rimuove spazi inutili
+    const query = req.query.query ? req.query.query.trim() : '';
     const maxPrice = req.query.maxPrice ? parseFloat(req.query.maxPrice) : null;
     const selectedCategories = req.query.categories ? req.query.categories.split(',') : [];
+    const sortOrder = req.query.sortOrder || 'relevance';
 
     try {
         // Costruisci la query SQL dinamica per i filtri
@@ -456,7 +475,28 @@ app.get('/ricerca', (req, res) => {
             ${maxPrice ? 'AND Prezzo <= ?' : ''} 
             ${selectedCategories.length > 0 ? 'AND Categoria IN (' + selectedCategories.map(() => '?').join(',') + ')' : ''}
         `;
+
+        // Aggiungi l'ordinamento
+        switch (sortOrder) {
+            case 'name_asc':
+                sql += ' ORDER BY Nome ASC';
+                break;
+            case 'name_desc':
+                sql += ' ORDER BY Nome DESC';
+                break;
+            case 'price_asc':
+                sql += ' ORDER BY Prezzo ASC';
+                break;
+            case 'price_desc':
+                sql += ' ORDER BY Prezzo DESC';
+                break;
+            default:
+                sql += ' ORDER BY INSTR(Nome, ?) DESC'; // Rilevanza
+                break;
+        }
+
         const params = [`%${query}%`, ...(maxPrice ? [maxPrice] : []), ...selectedCategories];
+        if (sortOrder === 'relevance') params.push(query);
 
         db.all(sql, params, (err, products) => {
             if (err) {
@@ -478,7 +518,8 @@ app.get('/ricerca', (req, res) => {
                     categories, 
                     user: req.session.user, 
                     selectedCategories, 
-                    maxPrice 
+                    maxPrice, 
+                    sortOrder 
                 });
             });
         });
@@ -907,6 +948,108 @@ app.get('/contatti', (req, res) => {
 // Route per la pagina delle spedizioni
 app.get('/spedizione', (req, res) => {
     res.render('spedizione', { user: req.session.user });
+});
+
+// Route per visualizzare la wishlist
+app.get('/wishlist', isAuthenticatedAndNotAdmin, (req, res) => {
+    const emailUtente = req.session.user.Email;
+
+    db.all(
+        `SELECT P.ID, P.Nome, P.Prezzo, P.Immagine, W.Quantita 
+         FROM Wishlist W 
+         JOIN Prodotti P ON W.ID_Prodotto = P.ID 
+         WHERE W.EmailUtente = ?`,
+        [emailUtente],
+        (err, rows) => {
+            if (err) {
+                console.error('Errore nel recupero della wishlist:', err.message);
+                return res.status(500).send('Errore interno del server.');
+            }
+            res.render('wishlist', { wishlistItems: rows, user: req.session.user });
+        }
+    );
+});
+
+// Route per aggiungere un prodotto alla wishlist
+app.post('/aggiungi_wishlist', isAuthenticatedAndNotAdmin, (req, res) => {
+    const { productId, quantity } = req.body;
+    const emailUtente = req.session.user.Email;
+
+    if (!productId || isNaN(quantity) || quantity < 1) {
+        return res.status(400).json({ success: false, message: 'ID o quantità non validi.' });
+    }
+
+    db.get('SELECT Quantita FROM Prodotti WHERE ID = ?', [productId], (err, row) => {
+        if (err || !row) {
+            console.error('Errore nel recupero del prodotto:', err?.message);
+            return res.status(500).json({ success: false, message: 'Errore interno del server.' });
+        }
+
+        if (row.Quantita < quantity) {
+            return res.json({ success: false, message: 'Quantità non disponibile in magazzino.' });
+        }
+
+        db.run(
+            `INSERT INTO Wishlist (EmailUtente, SessionID, ID_Prodotto, Quantita) 
+             VALUES (?, ?, ?, ?) 
+             ON CONFLICT(EmailUtente, SessionID, ID_Prodotto) 
+             DO UPDATE SET Quantita = Quantita + ?`,
+            [emailUtente, req.session.sessionID, productId, quantity, quantity],
+            (err) => {
+                if (err) {
+                    console.error('Errore nell\'aggiunta alla wishlist:', err.message);
+                    return res.status(500).json({ success: false, message: 'Errore interno del server.' });
+                }
+                res.json({ success: true, message: 'Prodotto aggiunto alla wishlist!' });
+            }
+        );
+    });
+});
+
+// Route per spostare un prodotto dalla wishlist al carrello
+app.post('/sposta_al_carrello', (req, res) => {
+    const { productId } = req.body;
+    const emailUtente = req.session.user ? req.session.user.Email : null;
+    const sessionID = req.session.sessionID;
+
+    db.get(
+        `SELECT Quantita FROM Wishlist WHERE (EmailUtente = ? OR SessionID = ?) AND ID_Prodotto = ?`,
+        [emailUtente, sessionID, productId],
+        (err, row) => {
+            if (err || !row) {
+                console.error('Errore nel recupero del prodotto dalla wishlist:', err?.message);
+                return res.status(500).send('Errore interno del server.');
+            }
+
+            const quantita = row.Quantita;
+
+            db.run(
+                `INSERT INTO Carrello (EmailUtente, SessionID, ID_Prodotto, Quantita) 
+                 VALUES (?, ?, ?, ?) 
+                 ON CONFLICT(EmailUtente, SessionID, ID_Prodotto) 
+                 DO UPDATE SET Quantita = Quantita + ?`,
+                [emailUtente, sessionID, productId, quantita, quantita],
+                (err) => {
+                    if (err) {
+                        console.error('Errore nello spostamento al carrello:', err.message);
+                        return res.status(500).send('Errore interno del server.');
+                    }
+
+                    db.run(
+                        `DELETE FROM Wishlist WHERE (EmailUtente = ? OR SessionID = ?) AND ID_Prodotto = ?`,
+                        [emailUtente, sessionID, productId],
+                        (err) => {
+                            if (err) {
+                                console.error('Errore nella rimozione dalla wishlist:', err.message);
+                                return res.status(500).send('Errore interno del server.');
+                            }
+                            res.redirect('/wishlist'); // Reindirizza alla pagina della wishlist
+                        }
+                    );
+                }
+            );
+        }
+    );
 });
 
 const PORT = process.env.PORT || 3000;

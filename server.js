@@ -444,13 +444,48 @@ app.post('/modifica_account', isAuthenticated, (req, res) => {
 
 // Route per la ricerca dei prodotti
 app.get('/ricerca', (req, res) => {
-    const query = req.query.q;
-    db.all('SELECT * FROM Prodotti WHERE Nome LIKE ? AND Disponibile = 1', [`%${query}%`], (err, rows) => {
-        if (err) {
-            return res.status(500).send('Errore nel recupero dei prodotti');
-        }
-        res.render('ricerca', { products: rows, user: req.session.user, query: query });
-    });
+    const query = req.query.query ? req.query.query.trim() : ''; // Rimuove spazi inutili
+    const maxPrice = req.query.maxPrice ? parseFloat(req.query.maxPrice) : null;
+    const selectedCategories = req.query.categories ? req.query.categories.split(',') : [];
+
+    try {
+        // Costruisci la query SQL dinamica per i filtri
+        let sql = `
+            SELECT * FROM Prodotti 
+            WHERE Nome LIKE ? 
+            ${maxPrice ? 'AND Prezzo <= ?' : ''} 
+            ${selectedCategories.length > 0 ? 'AND Categoria IN (' + selectedCategories.map(() => '?').join(',') + ')' : ''}
+        `;
+        const params = [`%${query}%`, ...(maxPrice ? [maxPrice] : []), ...selectedCategories];
+
+        db.all(sql, params, (err, products) => {
+            if (err) {
+                console.error('Errore nel recupero dei prodotti:', err.message);
+                return res.status(500).send('Errore del server');
+            }
+
+            // Recupera tutte le categorie
+            db.all('SELECT DISTINCT Categoria AS Nome FROM Prodotti', (err, categories) => {
+                if (err) {
+                    console.error('Errore nel recupero delle categorie:', err.message);
+                    return res.status(500).send('Errore del server');
+                }
+
+                // Passa i filtri selezionati al template
+                res.render('ricerca', { 
+                    query, 
+                    products, 
+                    categories, 
+                    user: req.session.user, 
+                    selectedCategories, 
+                    maxPrice 
+                });
+            });
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Errore del server');
+    }
 });
 
 // Route per le altre pagine
@@ -867,6 +902,11 @@ app.get('/dettagli_ordine/:id', isAuthenticated, (req, res) => {
 // Route per la pagina dei contatti
 app.get('/contatti', (req, res) => {
     res.render('contatti', { user: req.session.user });
+});
+
+// Route per la pagina delle spedizioni
+app.get('/spedizione', (req, res) => {
+    res.render('spedizione', { user: req.session.user });
 });
 
 const PORT = process.env.PORT || 3000;

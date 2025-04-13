@@ -18,25 +18,78 @@
         <h1 class="text-center mb-4">Risultati della ricerca per "<%= query %>"</h1>
         
         <div class="row">
-            <% if (products.length > 0) { %>
-                <% products.forEach(product => { %>
-                    <div class="col-md-4 mb-4">
-                        <div class="card h-100">
-                            <img src="/images/prodotti/<%= product.Immagine %>" class="card-img-top" alt="<%= product.Nome %>" style="height: 200px; object-fit: cover;">
-                            <div class="card-body">
-                                <h5 class="card-title"><%= product.Nome %></h5>
-                                <p class="card-text"><%= product.Descrizione %></p>
-                                <p class="card-text">Prezzo: €<%= product.Prezzo %></p>
-                                <a href="/prodotti/<%= product.ID %>" class="btn btn-primary">Dettagli</a>
-                            </div>
+            <!-- Sidebar con i filtri -->
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Filtra per</h5>
+                        
+                        <!-- Filtro per prezzo -->
+                        <div class="mb-4">
+                            <label for="priceRange" class="form-label">Prezzo massimo: €<span id="priceValue"><%= maxPrice || 100 %></span></label>
+                            <input type="range" class="form-range" min="0" max="100" step="1" id="priceRange" value="<%= maxPrice || 100 %>" oninput="document.getElementById('priceValue').textContent = this.value;">
                         </div>
+
+                        <!-- Filtro per categoria -->
+                        <div>
+                            <h6>Categorie</h6>
+                            <% categories.forEach(category => { %>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="<%= category.Nome %>" id="category-<%= category.Nome %>" 
+                                        <%= selectedCategories.includes(category.Nome) ? 'checked' : '' %>>
+                                    <label class="form-check-label" for="category-<%= category.Nome %>">
+                                        <%= category.Nome %>
+                                    </label>
+                                </div>
+                            <% }) %>
+                        </div>
+
+                        <!-- Bottone per applicare i filtri -->
+                        <button class="btn btn-primary mt-3" id="applyFilters">Applica filtri</button>
                     </div>
-                <% }) %>
-            <% } else { %>
-                <p class="text-center">Nessun prodotto trovato.</p>
-            <% } %>
+                </div>
+            </div>
+
+            <!-- Risultati della ricerca -->
+            <div class="col-md-9">
+                <div class="row">
+                    <% if (products.length > 0) { %>
+                        <% products.forEach(product => { %>
+                            <div class="col-md-4 mb-4">
+                                <div class="card h-100">
+                                    <img src="/images/prodotti/<%= product.Immagine %>" class="card-img-top" alt="<%= product.Nome %>" style="height: 200px; object-fit: cover;">
+                                    <div class="card-body">
+                                        <h5 class="card-title"><%= product.Nome %></h5>
+                                        <p class="card-text"><%= product.Descrizione %></p>
+                                        <p class="card-text">Prezzo: €<%= product.Prezzo %></p>
+                                        <a href="/prodotti/<%= product.ID %>" class="btn btn-primary">Dettagli</a>
+                                    </div>
+                                </div>
+                            </div>
+                        <% }) %>
+                    <% } else { %>
+                        <p class="text-center">Nessun prodotto trovato.</p>
+                    <% } %>
+                </div>
+            </div>
         </div>
     </div>
     <%- include('footer') %>
+
+    <script>
+        document.getElementById('applyFilters').addEventListener('click', () => {
+            const maxPrice = document.getElementById('priceRange').value;
+            const selectedCategories = Array.from(document.querySelectorAll('input[type="checkbox"]:checked'))
+                .map(checkbox => checkbox.value);
+
+            const params = new URLSearchParams({
+                query: "<%= query %>",
+                maxPrice,
+                categories: selectedCategories.join(',')
+            });
+
+            window.location.href = `/ricerca?${params.toString()}`;
+        });
+    </script>
 </body>
 </html>

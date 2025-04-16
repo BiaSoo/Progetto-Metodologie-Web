@@ -130,6 +130,10 @@ body {
     object-fit: cover;
 }
 
+.carousel-caption h5 {
+    color: black;
+}
+
 /* Stile per le carte dei prodotti */
 .card {
     border: 1px solid #e0e0e0; 

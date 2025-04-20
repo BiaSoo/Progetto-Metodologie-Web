@@ -29,68 +29,13 @@
 
     <!-- Contenuto della pagina -->
     <div class="container mt-5">
-        <h1>Gestione Prodotti</h1>
-        <p>Modifica i dettagli dei prodotti esistenti.</p>
+        <h1>Area Riservata</h1>
+        <p>Benvenuto nell'area riservata. Seleziona un'operazione dal menù sottostante:</p>
 
-        <!-- Elenco prodotti -->
-        <table class="table table-bordered">
-            <thead>
-                <tr>
-                    <th>Immagine</th>
-                    <th>Nome</th>
-                    <th>Prezzo</th>
-                    <th>Quantità</th>
-                    <th>Categoria</th>
-                    <th>Azioni</th>
-                </tr>
-            </thead>
-            <tbody>
-                <% products.forEach(product => { %>
-                <tr>
-                    <td><img src="/images/prodotti/<%= product.Immagine %>" alt="<%= product.Nome %>" width="100"></td>
-                    <td><%= product.Nome %></td>
-                    <td>€<%= product.Prezzo %></td>
-                    <td><%= product.Quantita %></td>
-                    <td><%= product.Categoria %></td>
-                    <td>
-                        <button class="btn btn-primary" onclick="editProduct(<%= product.ID %>)">Modifica</button>
-                    </td>
-                </tr>
-                <% }) %>
-            </tbody>
-        </table>
-
-        <!-- Modulo di modifica -->
-        <div id="edit-product-form" style="display: none;">
-            <h2>Modifica Prodotto</h2>
-            <form id="productForm" method="post" action="/modifica_prodotto" enctype="multipart/form-data">
-                <input type="hidden" id="productId" name="id">
-                <div class="mb-3">
-                    <label for="productName" class="form-label">Nome</label>
-                    <input type="text" class="form-control" id="productName" name="nome" required>
-                </div>
-                <div class="mb-3">
-                    <label for="productPrice" class="form-label">Prezzo</label>
-                    <input type="number" step="0.01" class="form-control" id="productPrice" name="prezzo" required>
-                </div>
-                <div class="mb-3">
-                    <label for="productQuantity" class="form-label">Quantità</label>
-                    <input type="number" class="form-control" id="productQuantity" name="quantita" required>
-                </div>
-                <div class="mb-3">
-                    <label for="productCategory" class="form-label">Categoria</label>
-                    <input type="text" class="form-control" id="productCategory" name="categoria" required>
-                </div>
-                <div class="mb-3">
-                    <label for="productImage" class="form-label">Immagine</label>
-                    <div class="drag-drop-area" id="dragDropArea">
-                        Trascina qui un'immagine o clicca per caricarla
-                    </div>
-                    <input type="file" class="form-control" id="productImage" name="immagine" style="display: none;">
-                </div>
-                <button type="submit" class="btn btn-success">Salva</button>
-                <button type="button" class="btn btn-secondary" onclick="cancelEdit()">Annulla</button>
-            </form>
+        <div class="d-flex flex-column gap-3">
+            <a href="/gestione_prodotti" class="btn btn-primary">Gestione Prodotti</a>
+            <a href="/gestione_ordini" class="btn btn-secondary">Gestione Ordini</a>
+            <a href="/magazzino" class="btn btn-success">Prodotti in Magazzino</a>
         </div>
     </div>
 

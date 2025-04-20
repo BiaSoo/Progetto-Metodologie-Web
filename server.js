@@ -1052,6 +1052,54 @@ app.post('/sposta_al_carrello', (req, res) => {
     );
 });
 
+// Route per la pagina gestione prodotti
+app.get('/gestione_prodotti', isAdmin, (req, res) => {
+    db.all('SELECT * FROM Prodotti', (err, rows) => {
+        if (err) {
+            console.error('Errore nel recupero dei prodotti:', err.message);
+            return res.status(500).send('Errore nel recupero dei prodotti');
+        }
+        res.render('gestione_prodotti', { user: req.session.user, products: rows });
+    });
+});
+
+// Route per la pagina di modifica prodotto
+app.get('/modifica_prodotto/:id', isAdmin, (req, res) => {
+    const productId = req.params.id;
+    db.get('SELECT * FROM Prodotti WHERE ID = ?', [productId], (err, product) => {
+        if (err) {
+            console.error('Errore nel recupero del prodotto:', err.message);
+            return res.status(500).send('Errore nel recupero del prodotto');
+        }
+        if (!product) {
+            return res.status(404).send('Prodotto non trovato');
+        }
+        res.render('modifica_prodotto', { user: req.session.user, product });
+    });
+});
+
+// Route per la pagina gestione ordini
+app.get('/gestione_ordini', isAdmin, (req, res) => {
+    db.all('SELECT * FROM Ordini', (err, rows) => {
+        if (err) {
+            console.error('Errore nel recupero degli ordini:', err.message);
+            return res.status(500).send('Errore nel recupero degli ordini');
+        }
+        res.render('gestione_ordini', { user: req.session.user, orders: rows });
+    });
+});
+
+// Route per la pagina magazzino
+app.get('/magazzino', isAdmin, (req, res) => {
+    db.all('SELECT Nome, Quantita FROM Prodotti', (err, rows) => {
+        if (err) {
+            console.error('Errore nel recupero dei prodotti dal magazzino:', err.message);
+            return res.status(500).send('Errore nel recupero dei prodotti dal magazzino');
+        }
+        res.render('magazzino', { user: req.session.user, products: rows });
+    });
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server in esecuzione su http://localhost:${PORT}`);

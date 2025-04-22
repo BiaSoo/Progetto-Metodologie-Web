@@ -578,10 +578,7 @@ app.get('/prodotti_esposizione', (req, res) => {
 app.post('/aggiungi_al_carrello', async (req, res) => {
     const { productId, quantity } = req.body;
 
-    console.log('Dati ricevuti:', { productId, quantity }); // Log dettagliato dei dati ricevuti
-
     if (!productId || isNaN(Number(productId))) {
-        console.error('ID prodotto non valido o undefined:', productId); // Log più dettagliato
         return res.status(400).json({ success: false, message: 'ID prodotto non valido.' });
     }
 
@@ -592,11 +589,8 @@ app.post('/aggiungi_al_carrello', async (req, res) => {
     try {
         const row = await new Promise((resolve, reject) => {
             db.get('SELECT Quantita FROM Prodotti WHERE ID = ?', [Number(productId)], (err, row) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(row);
-                }
+                if (err) reject(err);
+                else resolve(row);
             });
         });
 
@@ -619,22 +613,16 @@ app.post('/aggiungi_al_carrello', async (req, res) => {
                  DO UPDATE SET Quantita = Quantita + ?`,
                 [emailUtente, sessionID, Number(productId), quantity, quantity],
                 (err) => {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        resolve();
-                    }
+                    if (err) reject(err);
+                    else resolve();
                 }
             );
         });
 
         await new Promise((resolve, reject) => {
             db.run('UPDATE Prodotti SET Quantita = Quantita - ? WHERE ID = ?', [quantity, Number(productId)], (err) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve();
-                }
+                if (err) reject(err);
+                else resolve();
             });
         });
 
@@ -1098,6 +1086,34 @@ app.get('/magazzino', isAdmin, (req, res) => {
         }
         res.render('magazzino', { user: req.session.user, products: rows });
     });
+});
+
+// Route per la pagina di aggiunta prodotto
+app.get('/aggiungi_prodotto', isAdmin, (req, res) => {
+    res.render('aggiungi_prodotto', { user: req.session.user });
+});
+
+// Route per gestire l'aggiunta di un nuovo prodotto
+app.post('/aggiungi_prodotto', isAdmin, upload.single('immagine'), (req, res) => {
+    const { nome, prezzo, quantita, categoria, descrizione } = req.body;
+    const immagine = req.file ? `${req.file.filename}` : null;
+
+    if (!nome || !prezzo || !quantita || !categoria || !descrizione || !immagine) {
+        return res.status(400).send('Tutti i campi sono obbligatori.');
+    }
+
+    db.run(
+        `INSERT INTO Prodotti (Nome, Prezzo, Quantita, Categoria, Immagine, Descrizione) 
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [nome, prezzo, quantita, categoria, immagine, descrizione],
+        (err) => {
+            if (err) {
+                console.error('Errore durante l\'aggiunta del prodotto:', err.message);
+                return res.status(500).send('Errore durante l\'aggiunta del prodotto.');
+            }
+            res.redirect('/gestione_prodotti');
+        }
+    );
 });
 
 const PORT = process.env.PORT || 3000;

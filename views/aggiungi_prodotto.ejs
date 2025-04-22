@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8" />
-    <title>Modifica Prodotto</title>
+    <title>Aggiungi Prodotto</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans&display=swap">
     <link rel="stylesheet" href="/css/style.css">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -15,33 +15,29 @@
     <%- include('navbar', { user: user }) %>
 
     <div class="container mt-5">
-        <h1>Modifica Prodotto</h1>
-        <form action="/modifica_prodotto" method="POST" enctype="multipart/form-data">
-            <input type="hidden" name="id" value="<%= product.ID %>">
+        <h1>Aggiungi Nuovo Prodotto</h1>
+        <form action="/aggiungi_prodotto" method="POST" enctype="multipart/form-data">
             <div class="mb-3">
                 <label for="productName" class="form-label">Nome Prodotto</label>
-                <input type="text" class="form-control" id="productName" name="nome" value="<%= product.Nome %>" required>
+                <input type="text" class="form-control" id="productName" name="nome" required>
             </div>
             <div class="mb-3">
                 <label for="productPrice" class="form-label">Prezzo</label>
-                <input type="number" step="0.01" class="form-control" id="productPrice" name="prezzo" value="<%= product.Prezzo %>" required>
+                <input type="number" step="0.01" class="form-control" id="productPrice" name="prezzo" required>
             </div>
             <div class="mb-3">
                 <label for="productQuantity" class="form-label">Quantità</label>
-                <input type="number" class="form-control" id="productQuantity" name="quantita" value="<%= product.Quantita %>" required>
+                <input type="number" class="form-control" id="productQuantity" name="quantita" required>
             </div>
             <div class="mb-3">
                 <label for="productCategory" class="form-label">Categoria</label>
-                <input type="text" class="form-control" id="productCategory" name="categoria" value="<%= product.Categoria %>" required>
+                <input type="text" class="form-control" id="productCategory" name="categoria" required>
             </div>
             <div class="mb-3">
-                <label for="productImage" class="form-label">Immagine</label>
-                <input type="file" class="form-control" id="productImage" name="immagine">
+                <label for="productImage" class="form-label">Immagine Prodotto</label>
+                <input type="file" class="form-control" id="productImage" name="immagine" required>
             </div>
-            <div class="d-flex justify-content-center gap-3">
-                <button type="submit" class="btn btn-success">Salva Modifiche</button>
-                <a href="/gestione_prodotti" class="btn btn-secondary">Annulla</a>
-            </div>
+            <button type="submit" class="btn btn-success">Aggiungi Prodotto</button>
         </form>
     </div>
 </body>

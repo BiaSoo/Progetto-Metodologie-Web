@@ -861,7 +861,20 @@ app.post('/checkout', (req, res) => {
                         });
                     });
 
-                    Promise.all(dettagliPromises)
+                    const magazzinoPromises = cartItems.map(item => {
+                        return new Promise((resolve, reject) => {
+                            db.run(
+                                `UPDATE Prodotti SET Quantita = Quantita - ? WHERE ID = ?`,
+                                [item.Quantita, item.ID_Prodotto],
+                                (err) => {
+                                    if (err) reject(err);
+                                    else resolve();
+                                }
+                            );
+                        });
+                    });
+
+                    Promise.all([...dettagliPromises, ...magazzinoPromises])
                         .then(() => {
                             // Log riepilogo ordine
                             console.log(`Ordine effettuato da utente: ${emailUtente || 'Utente non registrato'}`);
@@ -886,7 +899,7 @@ app.post('/checkout', (req, res) => {
                             );
                         })
                         .catch((err) => {
-                            console.error('Errore durante l\'inserimento dei dettagli ordine:', err.message);
+                            console.error('Errore durante l\'inserimento dei dettagli ordine o aggiornamento magazzino:', err.message);
                             res.status(500).send('Errore interno del server.');
                         });
                 }
@@ -953,7 +966,7 @@ app.get('/wishlist', isAuthenticatedAndNotAdmin, (req, res) => {
                 console.error('Errore nel recupero della wishlist:', err.message);
                 return res.status(500).send('Errore interno del server.');
             }
-            res.render('wishlist', { wishlistItems: rows, user: req.session.user });
+            res.render('wishlist', { wishlistItems: rows, user: req.session.user, Items: rows });
         }
     );
 });
@@ -1036,6 +1049,46 @@ app.post('/sposta_al_carrello', (req, res) => {
                     );
                 }
             );
+        }
+    );
+});
+
+app.post('/modifica_quantita_wishlist', isAuthenticatedAndNotAdmin, (req, res) => {
+    const { productId, quantita } = req.body;
+
+    if (!productId || isNaN(quantita) || quantita < 1) {
+        return res.status(400).send('Quantità non valida.');
+    }
+
+    db.run(
+        `UPDATE Wishlist SET Quantita = ? WHERE EmailUtente = ? AND ID_Prodotto = ?`,
+        [quantita, req.session.user.Email, productId],
+        (err) => {
+            if (err) {
+                console.error('Errore durante la modifica della quantità:', err.message);
+                return res.status(500).send('Errore interno del server.');
+            }
+            res.redirect('/wishlist');
+        }
+    );
+});
+
+app.post('/rimuovi_da_wishlist', isAuthenticatedAndNotAdmin, (req, res) => {
+    const { productId } = req.body;
+
+    if (!productId) {
+        return res.status(400).send('ID prodotto non valido.');
+    }
+
+    db.run(
+        `DELETE FROM Wishlist WHERE EmailUtente = ? AND ID_Prodotto = ?`,
+        [req.session.user.Email, productId],
+        (err) => {
+            if (err) {
+                console.error('Errore durante la rimozione dalla wishlist:', err.message);
+                return res.status(500).send('Errore interno del server.');
+            }
+            res.redirect('/wishlist');
         }
     );
 });

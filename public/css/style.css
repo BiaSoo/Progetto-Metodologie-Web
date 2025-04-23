@@ -124,6 +124,17 @@ body {
     color: #ffffff;
 }
 
+.btn-danger {
+    background-color: #dc3545 !important;
+    border-color: #dc3545 !important;
+    color: #fff !important;
+}
+
+.btn-danger:hover {
+    background-color: #c82333 !important;
+    border-color: #bd2130 !important;
+}
+
 /* Stile per il carosello */
 .carousel-item img {
     height: 400px;
@@ -140,7 +151,10 @@ body {
     border-radius: 5px;
     overflow: hidden;
     transition: all 0.3s ease; 
-    height: 400px; /* Altezza fissa per tutte le card */
+    height: 350px; /* Altezza fissa per tutte le card */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 }
 
 .card:hover {
@@ -164,6 +178,9 @@ body {
 .card-title {
     font-size: 1.25rem;
     margin-bottom: 10px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap; /* Mantiene il titolo su una sola riga */
 }
 
 .card-text {
@@ -274,7 +291,8 @@ body.farmaci_generici .footer,
 body.prodotti_espozione .footer,
 body.erboristeria .footer,
 body.carrello .footer,
-body.dettagli_ordine .footer{
+body.dettagli_ordine .footer,
+body.wishlist .footer{
     display: flex;
     bottom: 0;
     width: 100%;
@@ -288,7 +306,8 @@ body.farmaci_generici-fixed-footer .footer,
 body.prodotti_esposizione-fixed-footer .footer,
 body.erboristeria-fixed-footer .footer,
 body.carrello-fixed-footer .footer,
-body.order-fixed-footer .footer{
+body.order-fixed-footer .footer,
+body.wishlist-fixed-footer .footer{
     position: fixed;
     bottom: 0;
     width: 100%;

@@ -10,7 +10,20 @@
     <link href="https://getbootstrap.com/docs/5.3/assets/css/docs.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.8.1/font/bootstrap-icons.min.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+        .btn-danger {
+            background-color: #dc3545 !important;
+            border-color: #dc3545 !important;
+            color: #fff !important;
+        }
+
+        .btn-danger:hover {
+            background-color: #c82333 !important;
+            border-color: #bd2130 !important;
+        }
+    </style>
 </head>
+<body class="wishlist <%= Items.length > 3 ? '' : 'wishlist-fixed-footer' %>">
 <%- include('navbar', { user: user }) %>
 <div class="container mt-5">
     <h1 class="mb-4">La tua Wishlist</h1>
@@ -20,14 +33,32 @@
                 <div class="col-md-4 mb-4">
                     <div class="card">
                         <img src="/images/prodotti/<%= item.Immagine %>" class="card-img-top" alt="<%= item.Nome %>">
-                        <div class="card-body">
-                            <h5 class="card-title"><%= item.Nome %></h5>
+                        <div class="card-body d-flex flex-column justify-content-between">
+                            <h5 class="card-title text-truncate"><%= item.Nome %></h5>
                             <p class="card-text">Prezzo: €<%= item.Prezzo.toFixed(2) %></p>
-                            <p class="card-text">Quantità: <%= item.Quantita %></p>
-                            <form action="/sposta_al_carrello" method="POST">
-                                <input type="hidden" name="productId" value="<%= item.ID %>">
-                                <button type="submit" class="btn btn-success">Aggiungi al Carrello</button>
-                            </form>
+                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                <form action="/modifica_quantita_wishlist" method="POST" class="d-flex align-items-center" style="border: none;">
+                                    <input type="hidden" name="productId" value="<%= item.ID %>">
+                                    <label for="quantita-<%= item.ID %>" class="me-2">Quantità:</label>
+                                    <select name="quantita" id="quantita-<%= item.ID %>" class="form-select form-select-sm w-auto" onchange="this.form.submit()">
+                                        <% for (let i = 1; i <= 10; i++) { %>
+                                            <option value="<%= i %>" <%= item.Quantita === i ? 'selected' : '' %>><%= i %></option>
+                                        <% } %>
+                                    </select>
+                                </form>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <form action="/sposta_al_carrello" method="POST" style="border: none;">
+                                    <input type="hidden" name="productId" value="<%= item.ID %>">
+                                    <button type="submit" class="btn btn-success">Aggiungi al Carrello</button>
+                                </form>
+                                <form action="/rimuovi_da_wishlist" method="POST" style="border: none;">
+                                    <input type="hidden" name="productId" value="<%= item.ID %>">
+                                    <button type="submit" class="btn btn-danger btn-outline-danger" title="Rimuovi dalla Wishlist">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -38,3 +69,5 @@
     </div>
 </div>
 <%- include('footer') %> 
+</body>
+</html>

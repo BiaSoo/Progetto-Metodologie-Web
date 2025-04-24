@@ -619,12 +619,12 @@ app.post('/aggiungi_al_carrello', async (req, res) => {
             );
         });
 
-        await new Promise((resolve, reject) => {
-            db.run('UPDATE Prodotti SET Quantita = Quantita - ? WHERE ID = ?', [quantity, Number(productId)], (err) => {
-                if (err) reject(err);
-                else resolve();
-            });
-        });
+        // await new Promise((resolve, reject) => {
+        //     db.run('UPDATE Prodotti SET Quantita = Quantita - ? WHERE ID = ?', [quantity, Number(productId)], (err) => {
+        //         if (err) reject(err);
+        //         else resolve();
+        //     });
+        // });
 
         res.json({ success: true, message: 'Prodotto aggiunto al carrello!' });
     } catch (err) {
@@ -643,7 +643,6 @@ function updateCart(emailUtente, sessionID, idProdotto, nuovaQuantita) {
                 (err) => {
                     if (err) reject(err);
                     else {
-                        console.log(`Quantità aggiornata: Prodotto ID ${idProdotto}, Nuova Quantità: ${nuovaQuantita}`);
                         resolve();
                     }
                 }
@@ -655,7 +654,6 @@ function updateCart(emailUtente, sessionID, idProdotto, nuovaQuantita) {
                 (err) => {
                     if (err) reject(err);
                     else {
-                        console.log(`Prodotto rimosso dal carrello: ID ${idProdotto}`);
                         resolve();
                     }
                 }
@@ -694,7 +692,6 @@ app.post('/update_quantity', (req, res) => {
             updateCart(emailUtente, sessionID, id, quantity)
                 .then(() => {
                     const newTotal = row.Prezzo * quantity;
-                    console.log(`Totale aggiornato per il prodotto ID ${id}: €${newTotal.toFixed(2)}`);
                     res.json({ success: true, newTotal });
                 })
                 .catch((err) => {
@@ -863,12 +860,26 @@ app.post('/checkout', (req, res) => {
 
                     const magazzinoPromises = cartItems.map(item => {
                         return new Promise((resolve, reject) => {
-                            db.run(
-                                `UPDATE Prodotti SET Quantita = Quantita - ? WHERE ID = ?`,
-                                [item.Quantita, item.ID_Prodotto],
-                                (err) => {
-                                    if (err) reject(err);
-                                    else resolve();
+                            db.get(
+                                `SELECT Quantita FROM Prodotti WHERE ID = ?`,
+                                [item.ID_Prodotto],
+                                (err, row) => {
+                                    if (err) {
+                                        return reject(err);
+                                    }
+
+                                    if (row.Quantita < item.Quantita) {
+                                        return reject(new Error(`Quantità insufficiente per il prodotto con ID ${item.ID_Prodotto}`));
+                                    }
+
+                                    db.run(
+                                        `UPDATE Prodotti SET Quantita = Quantita - ? WHERE ID = ?`,
+                                        [item.Quantita, item.ID_Prodotto],
+                                        (err) => {
+                                            if (err) reject(err);
+                                            else resolve();
+                                        }
+                                    );
                                 }
                             );
                         });
@@ -877,7 +888,7 @@ app.post('/checkout', (req, res) => {
                     Promise.all([...dettagliPromises, ...magazzinoPromises])
                         .then(() => {
                             // Log riepilogo ordine
-                            console.log(`Ordine effettuato da utente: ${emailUtente || 'Utente non registrato'}`);
+                            console.log(`Ordine effettuato da utente: ${emailUtente}`);
                             console.log('Prodotti:');
                             cartItems.forEach(item => {
                                 console.log(`- ID Prodotto: ${item.ID_Prodotto}, Quantità: ${item.Quantita}`);

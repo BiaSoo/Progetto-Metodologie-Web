@@ -32,6 +32,7 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json()); // middleware per analizzare il corpo delle richieste JSON
+app.use(express.json());
 
 // Configura il middleware per le sessioni
 app.use(session({
@@ -1068,7 +1069,7 @@ app.post('/modifica_quantita_wishlist', isAuthenticatedAndNotAdmin, (req, res) =
     const { productId, quantita } = req.body;
 
     if (!productId || isNaN(quantita) || quantita < 1) {
-        return res.status(400).send('Quantità non valida.');
+        return res.status(400).json({ success: false, message: 'Quantità non valida.' });
     }
 
     db.run(
@@ -1077,9 +1078,9 @@ app.post('/modifica_quantita_wishlist', isAuthenticatedAndNotAdmin, (req, res) =
         (err) => {
             if (err) {
                 console.error('Errore durante la modifica della quantità:', err.message);
-                return res.status(500).send('Errore interno del server.');
+                return res.status(500).json({ success: false, message: 'Errore interno del server.' });
             }
-            res.redirect('/wishlist');
+            res.json({ success: true });
         }
     );
 });

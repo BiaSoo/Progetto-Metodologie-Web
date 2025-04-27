@@ -37,14 +37,13 @@
                             <h5 class="card-title text-truncate"><%= item.Nome %></h5>
                             <p class="card-text">Prezzo: €<%= item.Prezzo.toFixed(2) %></p>
                             <div class="d-flex align-items-center justify-content-between mb-3">
-                                <form action="/modifica_quantita_wishlist" method="POST" class="d-flex align-items-center" style="border: none;">
+                                <form action="/modifica_quantita_wishlist" method="POST" class="d-flex align-items-center auto-submit-form" style="border: none;">
                                     <input type="hidden" name="productId" value="<%= item.ID %>">
                                     <label for="quantita-<%= item.ID %>" class="me-2">Quantità:</label>
-                                    <select name="quantita" id="quantita-<%= item.ID %>" class="form-select form-select-sm w-auto" onchange="this.form.submit()">
-                                        <% for (let i = 1; i <= 10; i++) { %>
-                                            <option value="<%= i %>" <%= item.Quantita === i ? 'selected' : '' %>><%= i %></option>
-                                        <% } %>
-                                    </select>
+                                    <input type="number" name="quantita[<%= item.ID %>]" id="quantita-<%= item.ID %>" 
+                                            value="<%= item.Quantita %>" min="1" max="<%= item.Disponibilita %>" 
+                                            class="form-control form-control-sm input-quantita" style="width: 150px;" 
+                                            data-product-id="<%= item.ID %>">
                                 </form>
                             </div>
                             <div class="d-flex justify-content-between">
@@ -69,5 +68,44 @@
     </div>
 </div>
 <%- include('footer') %> 
+<script>
+    document.querySelectorAll('.input-quantita').forEach(input => {
+        input.addEventListener('change', function () {
+            const productId = this.dataset.productId; // Recupera il productId dall'attributo data-product-id
+            const quantita = this.value;
+
+            if (quantita < 1) {
+                alert('La quantità deve essere almeno 1.');
+                this.value = 1;
+                return;
+            }
+
+            fetch('/modifica_quantita_wishlist', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ productId, quantita })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Errore durante l\'aggiornamento della quantità.');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    console.log('Quantità aggiornata con successo.');
+                } else {
+                    alert(data.message || 'Errore durante l\'aggiornamento della quantità.');
+                }
+            })
+            .catch(error => {
+                console.error('Errore:', error);
+                alert('Errore durante l\'aggiornamento della quantità.');
+            });
+        });
+    });
+</script>
 </body>
 </html>

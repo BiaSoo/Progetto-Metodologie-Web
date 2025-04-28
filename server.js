@@ -269,6 +269,13 @@ app.post('/accesso', (req, res) => {
             });
         }
 
+        if (row.AccessoSpeciale) {
+            return res.render('accesso', {
+                user: null,
+                errorMessage: 'L\'utente admin può accedere solo tramite l\'accesso riservato.'
+            });
+        }
+
         // Confronta la password fornita con quella memorizzata nel database
         bcrypt.compare(password, row.Password, (err, result) => {
             if (err) {
@@ -326,6 +333,13 @@ app.post('/accesso_riservato', (req, res) => {
             return res.render('accesso_riservato', { 
                 user: null, 
                 errorMessage: 'Non hai i permessi per accedere a questa area.' 
+            });
+        }
+
+        if (!row.AccessoSpeciale) {
+            return res.render('accesso_riservato', {
+                user: null,
+                errorMessage: 'Solo l\'utente admin può accedere tramite l\'accesso riservato.'
             });
         }
 

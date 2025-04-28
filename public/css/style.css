@@ -261,6 +261,7 @@ form input[type="password"]:hover {
     box-shadow: 0 0 8px rgba(40, 167, 69, 0.5); 
     background-color: #ffffff;
     outline: none; 
+    color: #000000;
 }
 
 form input[type="text"]:focus,

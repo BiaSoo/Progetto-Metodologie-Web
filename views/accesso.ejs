@@ -17,7 +17,7 @@
     <!--Pagina-->
     <div class="container mt-5">
         <form method="post" action="/accesso" align="center">
-            <h1>Login</h1>
+            <h1 align="center">Login</h1>
             <input type="text" id="email" placeholder="Email" name="email" maxlength="50" required class="btn btn-outline-success" width="100">
             <p></p>
             <input type="password" id="password" placeholder="Password" name="password" maxlength="50" required class="btn btn-outline-success" width="100">
@@ -27,8 +27,10 @@
                 <p id="error-message" style="color: red;"><%= errorMessage %></p>
             <% } %>
             <p></p>
-            <h4>Sei uno dei nostri collaboratori?</h4>
-            <a href="/accesso_riservato" class="btn btn-outline-primary">Accesso Speciale</a>
+            <h4 align="center">Sei uno dei nostri collaboratori?</h4>
+            <p align="center">
+                <a href="/accesso_riservato" class="btn btn-outline-primary" align="center" >Accesso Speciale</a>      
+            </p>
         </form>
     </div>
     <%- include('footer') %>

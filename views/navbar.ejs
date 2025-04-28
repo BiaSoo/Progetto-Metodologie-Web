@@ -16,36 +16,31 @@
             </form>
         </div>
 
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Attiva/disattiva la navigazione">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            <div class="ms-auto d-flex align-items-center">
-                <% if (user && user.Email === 'admin@example.com') { %>
-                    <a href="/area_riservata" class="btn btn-outline-success me-2">
-                        <i class="bi bi-person-fill-gear"></i>
-                    </a>
-                    <a href="/logout" class="btn btn-outline-danger">Logout</a>
-                <% } else if (user) { %>
-                    <a href="/carrello" class="btn btn-outline-success me-2">
-                        <i class="bi bi-cart"></i>
-                    </a>
-                    <a href="/wishlist" class="btn btn-outline-warning me-2">
-                        <i class="bi bi-heart"></i>
-                    </a>
-                    <a href="/mio_account" class="btn btn-outline-primary me-2">
-                        <i class="bi bi-person-circle"></i>
-                    </a>
-                    <a href="/logout" class="btn btn-outline-danger">Logout</a>
-                <% } else { %>
-                    <a href="/carrello" class="btn btn-outline-success me-2">
-                        <i class="bi bi-cart"></i>
-                    </a>
-                    <a href="/registrazione" class="btn btn-outline-success me-2">Registrati</a>
-                    <a href="/accesso" class="btn btn-outline-success">Accedi</a>
-                <% } %>
-            </div>
+        <!-- Bottoni sempre visibili -->
+        <div class="ms-auto d-flex align-items-center">
+            <% if (user && user.Email === 'admin@example.com') { %>
+                <a href="/area_riservata" class="btn btn-outline-success me-2">
+                    <i class="bi bi-person-fill-gear"></i>
+                </a>
+                <a href="/logout" class="btn btn-outline-danger">Logout</a>
+            <% } else if (user) { %>
+                <a href="/carrello" class="btn btn-outline-success me-2">
+                    <i class="bi bi-cart"></i>
+                </a>
+                <a href="/wishlist" class="btn btn-outline-warning me-2">
+                    <i class="bi bi-heart"></i>
+                </a>
+                <a href="/mio_account" class="btn btn-outline-primary me-2">
+                    <i class="bi bi-person-circle"></i>
+                </a>
+                <a href="/logout" class="btn btn-outline-danger">Logout</a>
+            <% } else { %>
+                <a href="/carrello" class="btn btn-outline-success me-2">
+                    <i class="bi bi-cart"></i>
+                </a>
+                <a href="/registrazione" class="btn btn-outline-success me-2">Registrati</a>
+                <a href="/accesso" class="btn btn-outline-success">Accedi</a>
+            <% } %>
         </div>
     </div>
 </nav>

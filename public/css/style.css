@@ -1,3 +1,31 @@
+/* Imposta una larghezza minima di 1000px per il layout */
+body {
+    min-width: 1000px; /* Larghezza minima per il layout */
+    overflow-x: 0px; 
+}
+
+/* Regole per il layout sopra i 1000px */
+@media (min-width: 1000px) {
+    .navbar, .footer, .content {
+        width: 100%;
+        max-width: auto; /* Permette al layout di occupare il 100% della larghezza */
+        margin: 0 auto; /* Centra il contenuto */
+    }
+}
+
+/* Assicura che la seconda navbar non venga nascosta dalla prima */
+.categories-bar {
+    margin-top: auto; /* Spazio sufficiente per evitare sovrapposizioni */
+    z-index: 999; /* Assicura che sia visibile sopra altri elementi */
+}
+
+/* Disabilita il ridimensionamento sotto i 1000px */
+@media (max-width: 999px) {
+    .navbar, .footer, .content {
+        width: 1000px; /* Mantiene la larghezza minima */
+    }
+}
+
 /* Stile generale per il corpo della pagina */
 body {
     font-family: 'Open Sans', sans-serif;
@@ -11,6 +39,7 @@ body {
     background-color: #ffffff;
     border-bottom: 1px solid #e0e0e0;
     z-index: 1000; 
+    max-height: 100px; 
 }
 
 .navbar-brand img {
@@ -77,13 +106,6 @@ body {
     overflow: hidden; 
 }
 
-/* Aggiungi una regola per schermi molto piccoli */
-@media (max-width: 576px) {
-    .search-bar-container button {
-        font-size: 0.9rem; 
-        width: auto; 
-    }
-}
 
 /* Stile per i bottoni delle categorie */
 .category-box {
@@ -270,56 +292,41 @@ form button {
     background-color: #aaa; 
 }
 
-/* Stile per il footer */
-body.login .footer,
-body.register .footer,
-body.prodotto .footer,
-body.contatti .footer,
-body.conferma_ordine .footer,
-body.dettagli_ordine .footer,
-body.modifica_account .footer{
-    position: fixed;
-    bottom: 0;
-    width: 100%;
+/* Aggiunta di regole per il footer adattabile */
+html {
+    height: 100%;
 }
 
-body.search .footer,
-body.erboristeria .footer,
-body.skincare .footer,
-body.integratori .footer,
-body.farmaci_generici .footer,
-body.prodotti_espozione .footer,
-body.erboristeria .footer,
-body.carrello .footer,
-body.dettagli_ordine .footer,
-body.wishlist .footer{
+body {
     display: flex;
-    bottom: 0;
-    width: 100%;
+    flex-direction: column;
+    min-height: 100%;
 }
 
-body.search-fixed-footer .footer,
-body.erboristeria-fixed-footer .footer,
-body.skincare-fixed-footer .footer,
-body.integratori-fixed-footer .footer,
-body.farmaci_generici-fixed-footer .footer,
-body.prodotti_esposizione-fixed-footer .footer,
-body.erboristeria-fixed-footer .footer,
-body.carrello-fixed-footer .footer,
-body.order-fixed-footer .footer,
-body.wishlist-fixed-footer .footer{
-    position: fixed;
+.main-content {
+    flex: 1;
+}
+
+.footer {
+    position: relative;
     bottom: 0;
     width: 100%;
+    background-color: #198754;
+    color: white;
+    padding: 20px;
+    text-align: center;
 }
+
+/* Fissa il footer in basso se c'è troppo spazio */
+body:after {
+    content: '';
+    display: block;
+    height: 1px;
+    margin-top: auto;
+}
+
 
 /* Stile per il footer nella pagina checkout */
-body.checkout .footer {
-    position: fixed;
-    bottom: 0;
-    width: 100%;
-}
-
 body.checkout-fixed-footer .footer {
     position: static;
 }
@@ -392,4 +399,77 @@ body.checkout-fixed-footer .footer {
 body.modifica_account h1 {
     text-align: center;
     margin-top: 20px;
+}
+
+/* Navbar layout per larghezze inferiori a 1000px */
+@media (max-width: 999px) {
+    .navbar {
+        display: flex;
+        flex-wrap: nowrap;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 15px; /* Aggiunge spazio ai lati */
+    }
+
+    .navbar-brand {
+        flex-shrink: 0; /* Impedisce al logo di ridimensionarsi */
+        margin-right: 10px;
+    }
+
+    .search-bar-container {
+        flex-grow: 1;
+        display: flex;
+        justify-content: center;
+        margin: 0 10px;
+        max-width: 400px; /* Limita la larghezza della barra di ricerca */
+    }
+
+    .search-bar-container form {
+        display: flex;
+        width: 100%;
+    }
+
+    .search-bar-container input {
+        flex-grow: 1;
+        border-radius: 5px 0 0 5px;
+    }
+
+    .search-bar-container button {
+        border-radius: 0 5px 5px 0;
+    }
+
+    .ms-auto {
+        display: flex;
+        flex-wrap: nowrap;
+        align-items: center;
+        justify-content: flex-end;
+        flex-shrink: 0; /* Impedisce ai bottoni di comprimersi */
+    }
+
+    .ms-auto a {
+        margin-left: 10px;
+    }
+}
+
+/* Seconda navbar layout per larghezze inferiori a 1000px */
+@media (max-width: 999px) {
+    .categories-bar {
+        display: flex;
+        flex-wrap: nowrap;
+        align-items: center;
+        justify-content: center;
+        overflow-x: auto; /* Permette lo scorrimento orizzontale se necessario */
+        padding: 0 15px;
+        height: auto;
+    }
+
+    .category-box {
+        flex-shrink: 0; /* Impedisce che le categorie si comprimano */
+        margin: 0 10px;
+        white-space: nowrap; /* Evita che il testo vada a capo */
+    }
+
+    .vertical-divider {
+        flex-shrink: 0; /* Impedisce che i divisori si comprimano */
+    }
 }

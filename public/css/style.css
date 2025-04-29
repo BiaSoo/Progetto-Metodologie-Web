@@ -167,6 +167,22 @@ body {
     color: black;
 }
 
+/* Cambia il colore delle frecce */
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+    background-color: #198754; /* Verde */
+    border-radius: 50%;
+}
+
+/* Cambia il colore dei pallini */
+.carousel-indicators [data-bs-target] {
+    background-color: #198754; /* Verde */
+}
+
+.carousel-indicators .active {
+    background-color: #000; /* Nero */
+}
+
 /* Stile per le carte dei prodotti */
 .card {
     border: 1px solid #e0e0e0; 

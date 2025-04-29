@@ -28,7 +28,38 @@
         <div class="container">
             <div class="row">
                 <div class="col-md-6">
-                    <img src="/images/prodotti/<%= product.Immagine %>" alt="<%= product.Nome %>" style="max-width: 600px; max-height: 600px;">
+                    <!-- Carosello Bootstrap -->
+                    <div id="productCarousel" class="carousel slide" data-bs-ride="carousel">
+                        <!-- Indicatori (pallini) -->
+                        <div class="carousel-indicators">
+                            <% product.ImageFiles.forEach((image, index) => { %>
+                                <button type="button" data-bs-target="#productCarousel" data-bs-slide-to="<%= index %>" 
+                                        class="<%= index === 0 ? 'active' : '' %>" aria-current="<%= index === 0 ? 'true' : '' %>" 
+                                        aria-label="Slide <%= index + 1 %>"></button>
+                            <% }); %>
+                        </div>
+
+                        <!-- Immagini del carosello -->
+                        <div class="carousel-inner">
+                            <% product.ImageFiles.forEach((image, index) => { %>
+                                <div class="carousel-item <%= index === 0 ? 'active' : '' %>">
+                                    <img src="/images/prodotti/<%= image %>" 
+                                         class="d-block w-100" 
+                                         alt="Immagine <%= index + 1 %> di <%= product.Nome %>">
+                                </div>
+                            <% }); %>
+                        </div>
+
+                        <!-- Controlli (frecce) -->
+                        <button class="carousel-control-prev" type="button" data-bs-target="#productCarousel" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Previous</span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#productCarousel" data-bs-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Next</span>
+                        </button>
+                    </div>
                 </div>
                 <div class="col-md-6">
                     <h3>Prezzo: €<%= product.Prezzo %></h3>

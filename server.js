@@ -5,6 +5,7 @@ const sqlite3 = require('sqlite3').verbose();
 const session = require('express-session');
 const bcrypt = require('bcrypt');
 const multer = require('multer');
+const fs = require('fs');
 const app = express();
 const port = 3000;
 
@@ -197,6 +198,26 @@ app.get('/prodotti/:id', (req, res) => {
         if (!row) {
             return res.status(404).send('Prodotto non trovato');
         }
+
+        // Percorso della cartella immagini
+        const productImagesPath = path.join(__dirname, 'public/images/prodotti');
+        const baseImageName = row.Immagine.replace('.jpg', ''); // Rimuove l'estensione .jpg
+        const imageFiles = [];
+
+        // Cerca tutte le immagini che seguono il formato <nome-immagine>-<numero>.jpg
+        let index = 1;
+        while (fs.existsSync(path.join(productImagesPath, `${baseImageName}-${index}.jpg`))) {
+            imageFiles.push(`${baseImageName}-${index}.jpg`);
+            index++;
+        }
+
+        // Aggiungi l'immagine principale come prima immagine
+        imageFiles.unshift(row.Immagine);
+
+        // Passa il numero di immagini e i dettagli del prodotto alla vista
+        row.ImageCount = imageFiles.length;
+        row.ImageFiles = imageFiles;
+
         res.render('prodotto', { product: row, user: req.session.user, sessionID: req.session.sessionID });
     });
 });

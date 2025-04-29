@@ -123,9 +123,15 @@ db.serialize(() => {
             return;
         }
 
-        bcrypt.hash('1234', saltRounds, (err, userHash) => {
+    bcrypt.hash('1234', saltRounds, (err, userHash) => {
             if (err) {
                 console.error('Errore nell\'hashing della password user:', err.message);
+                return;
+            }
+
+        bcrypt.hash('password_gabriele', saltRounds, (err, gabrieleHash) => {
+            if (err) {
+                console.error('Errore nell\'hashing della password gabriele:', err.message);
                 return;
             }
 
@@ -134,36 +140,11 @@ db.serialize(() => {
                 ('admin@example.com', ?, 'Admin', 'User', 'Via Roma 1', '1234567890', 1),
                 ('user@example.com', ?, 'User', 'Example', 'Via Milano 2', '0987654321', 0),
                 ('gabriele@gmail.com', ?, 'Gabriele', 'Rossi', 'Via Prova 3', '1122334455', 0)
-            `, [adminHash, userHash]);
+            `, [adminHash, userHash, gabrieleHash]);
         });
     });
+});
 
-    // Inserimento prodotti di esempio
-    db.run(`INSERT OR IGNORE INTO Prodotti (Nome, Prezzo, Quantita, Categoria, Immagine, Descrizione) VALUES
-        ('La Roche-Posay Cicaplast B5 Siero 30 ml', 32.39, 100, 'Skincare', 'la-roche-posay-cicaplast.jpg', "La nostra più alta concentrazione di Vitamina B5 al 10% per riparare e proteggere la funzione barriera della pelle. La sua formula esclusiva lascia un film leggero sul viso, che aiuta a proteggere la pelle dalle aggressioni esterne e consente un recupero ottimale della barriera cutanea."),
-        ('La Roche-Posay Effaclar Siero Peeling Viso 30 ml', 35.49, 50, 'Skincare', 'la-roche-posay-effaclar.jpg', "Effaclar siero ultra concentrato, il primo siero peeling di LRP anti imperfezioni e anti segni. Risultati visibili già dal giorno dopo. Efficace anche contro l'acne adulta. Contrasta i segni e le imperfezioni dell'acne adulta. Risultati visibili già dal giorno dopo. Siero a rapido assorbimento."),
-        ('La Roche-Posay Effaclar Gel Anti-imperfezioni 400 ml', 19.99, 75, 'Skincare', 'la-roche-posay-effaclar-gel.jpg', "Gel schiumogeno purificante. Deterge la pelle del viso grassa e sensibile, a tendenza acneica. Riduce la visibilità dei segni, tratta i punti neri e tiene sotto controllo la lucidità. Purifica la pelle grassa mantenendola idratata. Lascia la pelle pulita e rinfrescata."),
-        ('Acqua micellare CeraVe', 13.69, 100, 'Skincare', 'cerave-acqua-micellare.jpg', "L’ Acqua Micellare Detergente CeraVe è un detergente viso delicato con formula senza risciacquo. Arricchita con tre ceramidi essenziali e niacinamide, questa acqua micellare rimuove le impurità, sebo in eccesso e make up, nel rispetto della barriera protettiva della pelle. Non comedogenica, senza profumo. Adatta a pelli sensibili."),
-        ('Crema viso CeraVe', 12.99, 100, 'Skincare', 'cerave-crema-viso.jpg', "La Crema Viso Idratante CeraVe è una crema viso idratante per pelli secche e molto secche. Arricchita con tre ceramidi essenziali e acido ialuronico, questa crema viso idratante rafforza la barriera protettiva della pelle e idrata a fondo. Non comedogenica, senza profumo. Adatta a pelli sensibili."),
-        ('Crema mani Neutrogena', 3.99, 100, 'Skincare', 'neutrogena-crema-mani.jpg', "La Crema Mani Concentrata Neutrogena è una crema mani idratante e protettiva per mani secche e screpolate. Arricchita con glicerina, questa crema mani idrata a fondo e protegge la pelle delle mani. Non unge, non lascia residui. Adatta a pelli secche e sensibili."),
-        ('Crema viso Neutrogena', 9.99, 100, 'Skincare', 'neutrogena-crema-viso.jpg', "La Crema Viso Idratante Neutrogena è una crema viso idratante per pelli secche e sensibili. Arricchita con glicerina e vitamina E, questa crema viso idrata a fondo e protegge la pelle del viso. Non comedogenica, senza profumo. Adatta a pelli secche e sensibili."),
-        ('Crema mani Vichy', 4.99, 100, 'Skincare', 'vichy-crema-mani.jpg', "La Crema Mani Idratante Vichy è una crema mani idratante e protettiva per mani secche e screpolate. Arricchita con glicerina e vitamina, questa crema mani idrata a fondo e protegge la pelle delle mani. Non unge, non lascia residui. Adatta a pelli secche e sensibili."),
-        ('Paracetamolo 500', 5.0, 100, 'Farmaci Generici', 'paracetamolo.jpg', "Come antipiretico: trattamento sintomatica di affezioni febbrili quali influenza, le malattie esantematiche, le affezioni acute del tratto respiratorio, ecc. Come analgesico: cefalee, nevralgie, mialgie ed al tre manifestazioni dolorose di media entita', di varia origine."),
-        ('Tachipirina 500', 4.0, 100, 'Farmaci Generici', 'tachipirina.jpg', "Indicata per il TRATTAMENTO DELLA FEBBRE E DEL DOLORE di varia origine. Tachipirina contiene il principio attivo PARACETAMOLO che agisce riducendo la febbre (antipiretico) e alleviando il dolore (analgesico). Tachipirina è utilizzato negli adulti, adolescenti e bambini per: -     il trattamento sintomatico degli stati febbrili quali l’influenza, le malattie esantematiche (malattie infettive tipiche dei bambini e degli adolescenti), le malattie acute del tratto respiratorio, ecc. -     dolori di varia origine e natura (mal di testa, nevralgie, dolori muscolari ed altre manifestazioni dolorose di media entità). Si rivolga al medico se lei/il bambino non si sente meglio o se si sente peggio dopo 3 giorni di trattamento."),
-        ('Moment 200', 3.0, 100, 'Farmaci Generici', 'moment.jpg', "Indicato per il trattamento sintomatico di mal di testa, mal di denti, dolori mestruali, dolori muscolari e dolori articolari di lieve intensità."),
-        ('Ibuprofene 400', 6.0, 100, 'Farmaci Generici', 'ibuprofene.jpg', "IBUPROFENE DOC è utilizzato: • per trattare il dolore di varia natura, dovuto a mal di denti (ad esempio dopo estrazione o interventi ai denti e alla bocca), dolori mestruali, mal di testa, dolori ai muscoli, alle articolazioni (osteoarticolari) e ai nervi (nervralgie); • insieme ad altri farmaci, per trattare i sintomi dovuti all'influenza o agli stati febbrili."),
-        ('Aspirinaact dolore e infiammazione 1000 mg', 7.99, 100, 'Farmaci Generici', 'aspirinaact.jpg', "Calma il dolore e riduce la febbre. E' indicato per il trattamento sintomatico di: mal di testa, mal di denti, dolori mestruali, dolori muscolari e articolari, stati febbrili."),
-        ('Echinacea Complex', 10.0, 100, 'Erboristeria', 'echinacea.jpg', "Gli integratori non sostituiscono un’alimentazione equilibrata e variegata e uno stile di vita sano. Integratore alimentare a base di echinacea e rosa canina. La rosa canina apporta vitamina C con azione antiossidante. L’echinacea supporta le naturali difese dell’organismo ed è utile nei periodi freddi a supporto delle funzionalità delle prime vie respiratorie. Adatto ai vegani."),
-        ('TRUE NATURE Maca Ginseng 8000 200 capsule', 29.99, 100, 'Erboristeria', 'ginseng.jpg', "200 capsule, maca gialla ad alto dosaggio - “Ginseng del Perù”, garanzia di rimborso di 365 giorni, Made in Germany. Gli integratori non sostituiscono un’alimentazione equilibrata e variegata e uno stile di vita sano."),
-        ('Valeriana Act 60 pz', 8.0, 100, 'Erboristeria', 'valeriana.jpg', "Gli integratori non sostituiscono un’alimentazione equilibrata e variegata e uno stile di vita sano. Integratore alimentare a base di estratto secco di Valeriana, favorisce il benessere mentale e il rilassamento in caso di stress."),
-        ('Supradyn Gummy Vitamina C', 15.0, 100, 'Integratori', 'supradyn-vitamina-c.jpg', "Contribuisce alla normale funzione del sistema immunitario Nota importante: Questo prodotto contiene dosi elevate di vitamina D3. Deve essere utilizzato solo su consiglio del medico per la profilassi o il trattamento della carenza di vitamina D dovuta a varie cause. L'apporto di vitamina D può essere valutato mediante esami del sangue. Durante il trattamento a lungo termine, è necessario monitorare i livelli di calcio nel sangue e nelle urine e la funzionalità renale. Questo vale anche per l'uso di integratori di vitamina D ad alto dosaggio."),
-        ('Vitamin C 1000Mg 20 Compresse Effervescenti', 12.0, 100, 'Integratori', 'vitamina-c.jpg', "Integratore alimentare a base di vitamina C. La vitamina C contribuisce alla normale funzione del sistema immunitario e alla protezione delle cellule dallo stress ossidativo."),
-        ('Metagenics Vitamina D 1000 U.l.', 18.0, 100, 'Integratori', 'vitamina-d.jpg', "Per un apporto di Vitamina D in caso di stati carenziali. Nota importante: Questo prodotto contiene dosi elevate di vitamina D3. Deve essere utilizzato solo su consiglio del medico per la profilassi o il trattamento della carenza di vitamina D dovuta a varie cause. L'apporto di vitamina D può essere valutato mediante esami del sangue. Durante il trattamento a lungo termine, è necessario monitorare i livelli di calcio nel sangue e nelle urine e la funzionalità renale. Questo vale anche per l'uso di integratori di vitamina D ad alto dosaggio."),
-        ('Bulk Omega-3 superpotenti Capsule molli da 1000 mg', 19.99, 100, 'Integratori', 'omega-3.jpg', "Gli oli di pesce omega 3 contengono acidi grassi essenziali che non possono essere sintetizzati dal corpo umano (possono essere ingeriti solo da alimenti e integratori) e aiutano a promuovere la normale funzione cardiaca; le nostre softgel omega 3 extra forti da 1000 mg sono quindi destinate a integrare qualsiasi dieta e stile di vita sani."),
-        ('Termometro PIC', 30.0, 100, 'Prodotti Esposizione', 'termometro-pic.jpg', "Termometro in vetro che non contiene mercurio. Al suo posto c’è una particolare lega di indio, gallio e stagno. "),
-        ('Meditrade Suavel Protec Plus OP Mask, Green | Pacchetto 50 pezzi', 10.0, 100, 'Prodotti Esposizione', 'mascherine.jpg', "Meditrade Suavel® Protec Plus OP Mask, Green Maschera operazionale ad alta filtro con anelli elastici Dettagli Questo prodotto è realizzato per essere utilizzato sia nella sala operatoria che nelle stazioni ospedaliere. Protegge il personale medico e i pazienti riducendo il rischio di trasmissioni e infezioni germinali. Il comfort ad alto consumo è garantito anche per un uso più lungo.  "),
-        ('Gel disinfettante', 3.99, 100, 'Prodotti Esposizione', 'gel-disinfettante-mani.jpg', "Elimina fino al 99.99% di batteri, virus e lieviti. Disinfezione rapida delle mani senza acqua, senza sapone, senza risciacquo. Non secca le mani. Principio attivo vegetale: 71.9% di alcool vegetale non denaturato da ftalati. 3 oli essenziali (Limone, Lavandino Grosso, Tea Tree). Con Aloe vera addolcente. ")
-    `);
 });
 
 // Route per la pagina principale

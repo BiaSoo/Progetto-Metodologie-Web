@@ -592,6 +592,56 @@ app.get('/prodotti_esposizione', (req, res) => {
     });
 });
 
+// Route per la categoria "Omeopatici"
+app.get('/omeopatici', (req, res) => {
+    db.all('SELECT * FROM Prodotti WHERE Categoria = ? AND Disponibile = 1', ['Omeopatici'], (err, rows) => {
+        if (err) {
+            return res.status(500).send('Errore nel recupero dei prodotti Omeopatici');
+        }
+        res.render('omeopatici', { products: rows, user: req.session.user });
+    });
+});
+
+// Route per la categoria "Bambini"
+app.get('/bambini', (req, res) => {
+    db.all('SELECT * FROM Prodotti WHERE Categoria = ? AND Disponibile = 1', ['Bambini'], (err, rows) => {
+        if (err) {
+            return res.status(500).send('Errore nel recupero dei prodotti Bambini');
+        }
+        res.render('bambini', { products: rows, user: req.session.user });
+    });
+});
+
+// Route per la categoria "Capelli"
+app.get('/capelli', (req, res) => {
+    db.all('SELECT * FROM Prodotti WHERE Categoria = ? AND Disponibile = 1', ['Capelli'], (err, rows) => {
+        if (err) {
+            return res.status(500).send('Errore nel recupero dei prodotti Capelli');
+        }
+        res.render('capelli', { products: rows, user: req.session.user });
+    });
+});
+
+// Route per la categoria "Igiene Orale"
+app.get('/igiene_orale', (req, res) => {
+    db.all('SELECT * FROM Prodotti WHERE Categoria = ? AND Disponibile = 1', ['Igiene Orale'], (err, rows) => {
+        if (err) {
+            return res.status(500).send('Errore nel recupero dei prodotti Igiene Orale');
+        }
+        res.render('igiene_orale', { products: rows, user: req.session.user });
+    });
+});
+
+// Route per la categoria "Ortopedici"
+app.get('/ortopedici', (req, res) => {
+    db.all('SELECT * FROM Prodotti WHERE Categoria = ? AND Disponibile = 1', ['Ortopedici'], (err, rows) => {
+        if (err) {
+            return res.status(500).send('Errore nel recupero dei prodotti Ortopedici');
+        }
+        res.render('ortopedici', { products: rows, user: req.session.user });
+    });
+});
+
 app.post('/aggiungi_al_carrello', async (req, res) => {
     const { productId, quantity } = req.body;
 

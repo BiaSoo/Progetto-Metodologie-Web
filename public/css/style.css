@@ -17,6 +17,43 @@ body {
 .categories-bar {
     margin-top: auto; /* Spazio sufficiente per evitare sovrapposizioni */
     z-index: 999; /* Assicura che sia visibile sopra altri elementi */
+    padding: 5px 0; /* Riduce il padding verticale */
+    background-color: #f8f9fa; /* Colore di sfondo leggero */
+    border-top: 1px solid #e0e0e0; /* Aggiunge un bordo superiore sottile */
+    border-bottom: 1px solid #e0e0e0; /* Aggiunge un bordo inferiore sottile */
+    overflow-x: auto; /* Permette lo scorrimento orizzontale su schermi piccoli */
+    white-space: nowrap; /* Evita che le categorie vadano a capo */
+}
+
+/* Stile migliorato per i bottoni delle categorie */
+.categories-bar .category-box {
+    font-size: 0.85rem; /* Riduce la dimensione del testo */
+    padding: 8px 12px; /* Riduce il padding interno */
+    margin: 3px 6px; /* Riduce lo spazio tra i blocchi */
+    border-radius: 4px; /* Angoli arrotondati più sottili */
+    text-align: center;
+    transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease; /* Effetto hover fluido */
+    display: inline-block;
+    white-space: nowrap; /* Evita che il testo vada a capo */
+}
+
+.categories-bar .category-box:hover {
+    background-color: var(--hover-color); /* Colore di sfondo al passaggio del mouse */
+    color: #fff; /* Colore del testo al passaggio del mouse */
+    box-shadow: 0 0 8px var(--hover-color); /* Aggiunge un'ombra leggera */
+}
+
+/* Stile migliorato per i divisori verticali */
+.categories-bar .vertical-divider {
+    width: 1px;
+    height: 15px; /* Altezza ridotta per un aspetto più compatto */
+    background-color: #ddd;
+    margin: 0 5px; /* Spazio ridotto ai lati del divisore */
+    align-self: center;
+}
+
+.categories-bar .vertical-divider-tall {
+    height: 25px; /* Altezza leggermente maggiore per il divisore finale */
 }
 
 /* Disabilita il ridimensionamento sotto i 1000px */

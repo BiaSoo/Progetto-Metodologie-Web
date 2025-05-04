@@ -101,7 +101,7 @@ db.serialize(() => {
         SessionID TEXT NOT NULL,
         ID_Prodotto INTEGER NOT NULL,
         Quantita INTEGER NOT NULL,
-        PRIMARY KEY(EmailUtente, SessionID, ID_Prodotto),
+        PRIMARY KEY(EmailUtente, ID_Prodotto),
         FOREIGN KEY(EmailUtente) REFERENCES Utenti(Email),
         FOREIGN KEY(ID_Prodotto) REFERENCES Prodotti(ID)
     )`);
@@ -111,7 +111,7 @@ db.serialize(() => {
         SessionID TEXT NOT NULL,
         ID_Prodotto INTEGER NOT NULL,
         Quantita INTEGER NOT NULL DEFAULT 1,
-        PRIMARY KEY(EmailUtente, SessionID, ID_Prodotto),
+        PRIMARY KEY(EmailUtente, ID_Prodotto),
         FOREIGN KEY(EmailUtente) REFERENCES Utenti(Email),
         FOREIGN KEY(ID_Prodotto) REFERENCES Prodotti(ID)
     )`);
@@ -173,20 +173,25 @@ app.get('/carrello', (req, res) => {
     const emailUtente = req.session.user ? req.session.user.Email : null;
     const sessionID = req.session.sessionID;
 
-    db.all(
-        `SELECT P.Nome, P.Prezzo, P.Immagine, C.Quantita, C.ID_Prodotto 
-         FROM Carrello C 
-         JOIN Prodotti P ON C.ID_Prodotto = P.ID 
-         WHERE (C.EmailUtente = ? OR C.SessionID = ?)`,
-        [emailUtente, sessionID],
-        (err, rows) => {
-            if (err) {
-                console.error('Errore nel recupero del carrello:', err.message);
-                return res.status(500).send('Errore interno del server.');
-            }
-            res.render('carrello', { cartItems: rows, user: req.session.user });
+    const query = emailUtente
+        ? `SELECT P.Nome, P.Prezzo, P.Immagine, C.Quantita, C.ID_Prodotto 
+           FROM Carrello C 
+           JOIN Prodotti P ON C.ID_Prodotto = P.ID 
+           WHERE C.EmailUtente = ?`
+        : `SELECT P.Nome, P.Prezzo, P.Immagine, C.Quantita, C.ID_Prodotto 
+           FROM Carrello C 
+           JOIN Prodotti P ON C.ID_Prodotto = P.ID 
+           WHERE C.SessionID = ?`;
+
+    const params = emailUtente ? [emailUtente] : [sessionID];
+
+    db.all(query, params, (err, rows) => {
+        if (err) {
+            console.error('Errore nel recupero del carrello:', err.message);
+            return res.status(500).send('Errore interno del server.');
         }
-    );
+        res.render('carrello', { cartItems: rows, user: req.session.user });
+    });
 });
 
 // Route dinamica per i dettagli del prodotto
@@ -279,7 +284,7 @@ app.post('/accesso', (req, res) => {
         }
 
         // Confronta la password fornita con quella memorizzata nel database
-        bcrypt.compare(password, row.Password, (err, result) => {
+        bcrypt.compare(password, row.Password, async (err, result) => {
             if (err) {
                 return res.status(500).send('Errore nel confronto delle password');
             }
@@ -288,20 +293,56 @@ app.post('/accesso', (req, res) => {
                 // Login riuscito
                 req.session.user = row;
 
-                // Aggiorna il carrello con i dati dell'utente
-                db.run(
-                    `UPDATE Carrello SET EmailUtente = ? WHERE SessionID = ?`,
-                    [row.Email, req.session.sessionID],
-                    (err) => {
-                        if (err) {
-                            console.error('Errore nella sincronizzazione del carrello:', err.message);
-                        }
-                    }
-                );
+                try {
+                    const sessionID = req.session.sessionID;
 
-                return res.redirect('/');
+                    // Recupera i prodotti dal carrello del guest
+                    const guestCart = await new Promise((resolve, reject) => {
+                        db.all(
+                            `SELECT ID_Prodotto, Quantita FROM Carrello WHERE SessionID = ?`,
+                            [sessionID],
+                            (err, rows) => {
+                                if (err) reject(err);
+                                else resolve(rows);
+                            }
+                        );
+                    });
+
+                    // Per ogni prodotto nel carrello del guest, aggiorna o inserisci nel carrello dell'utente
+                    for (const item of guestCart) {
+                        await new Promise((resolve, reject) => {
+                            db.run(
+                                `INSERT INTO Carrello (EmailUtente, SessionID, ID_Prodotto, Quantita)
+                                 VALUES (?, ?, ?, ?)
+                                 ON CONFLICT(EmailUtente, ID_Prodotto)
+                                 DO UPDATE SET Quantita = Quantita + excluded.Quantita`,
+                                [row.Email, sessionID, item.ID_Prodotto, item.Quantita],
+                                (err) => {
+                                    if (err) reject(err);
+                                    else resolve();
+                                }
+                            );
+                        });
+                    }
+
+                    // Rimuovi i prodotti dal carrello del guest
+                    await new Promise((resolve, reject) => {
+                        db.run(
+                            `DELETE FROM Carrello WHERE SessionID = ?`,
+                            [sessionID],
+                            (err) => {
+                                if (err) reject(err);
+                                else resolve();
+                            }
+                        );
+                    });
+
+                    return res.redirect('/');
+                } catch (err) {
+                    console.error('Errore nella sincronizzazione del carrello:', err.message);
+                    return res.status(500).send('Errore interno del server.');
+                }
             } else {
-                // Password errata
                 return res.render('accesso', { 
                     user: null, 
                     errorMessage: 'Password errata.' 
@@ -592,7 +633,6 @@ app.get('/prodotti_esposizione', (req, res) => {
     });
 });
 
-// Route per la categoria "Omeopatici"
 app.get('/omeopatici', (req, res) => {
     db.all('SELECT * FROM Prodotti WHERE Categoria = ? AND Disponibile = 1', ['Omeopatici'], (err, rows) => {
         if (err) {
@@ -602,7 +642,6 @@ app.get('/omeopatici', (req, res) => {
     });
 });
 
-// Route per la categoria "Bambini"
 app.get('/bambini', (req, res) => {
     db.all('SELECT * FROM Prodotti WHERE Categoria = ? AND Disponibile = 1', ['Bambini'], (err, rows) => {
         if (err) {
@@ -612,7 +651,6 @@ app.get('/bambini', (req, res) => {
     });
 });
 
-// Route per la categoria "Capelli"
 app.get('/capelli', (req, res) => {
     db.all('SELECT * FROM Prodotti WHERE Categoria = ? AND Disponibile = 1', ['Capelli'], (err, rows) => {
         if (err) {
@@ -622,7 +660,6 @@ app.get('/capelli', (req, res) => {
     });
 });
 
-// Route per la categoria "Igiene Orale"
 app.get('/igiene_orale', (req, res) => {
     db.all('SELECT * FROM Prodotti WHERE Categoria = ? AND Disponibile = 1', ['Igiene Orale'], (err, rows) => {
         if (err) {
@@ -632,7 +669,6 @@ app.get('/igiene_orale', (req, res) => {
     });
 });
 
-// Route per la categoria "Ortopedici"
 app.get('/ortopedici', (req, res) => {
     db.all('SELECT * FROM Prodotti WHERE Categoria = ? AND Disponibile = 1', ['Ortopedici'], (err, rows) => {
         if (err) {
@@ -669,29 +705,23 @@ app.post('/aggiungi_al_carrello', async (req, res) => {
             return res.json({ success: false, message: 'Quantità non disponibile in magazzino.' });
         }
 
-        const emailUtente = req.session.user ? req.session.user.Email : null;
-        const sessionID = req.session.sessionID;
+        const emailUtente = req.session.user ? req.session.user.Email : `guest-${req.session.sessionID}`;
+
+        console.log({ emailUtente, sessionID: req.session.sessionID, productId, quantity });
 
         await new Promise((resolve, reject) => {
             db.run(
                 `INSERT INTO Carrello (EmailUtente, SessionID, ID_Prodotto, Quantita) 
                  VALUES (?, ?, ?, ?) 
-                 ON CONFLICT(EmailUtente, SessionID, ID_Prodotto) 
-                 DO UPDATE SET Quantita = Quantita + ?`,
-                [emailUtente, sessionID, Number(productId), quantity, quantity],
+                 ON CONFLICT(EmailUtente, ID_Prodotto) 
+                 DO UPDATE SET Quantita = Quantita + excluded.Quantita`,
+                [emailUtente, req.session.sessionID, Number(productId), quantity],
                 (err) => {
                     if (err) reject(err);
                     else resolve();
                 }
             );
         });
-
-        // await new Promise((resolve, reject) => {
-        //     db.run('UPDATE Prodotti SET Quantita = Quantita - ? WHERE ID = ?', [quantity, Number(productId)], (err) => {
-        //         if (err) reject(err);
-        //         else resolve();
-        //     });
-        // });
 
         res.json({ success: true, message: 'Prodotto aggiunto al carrello!' });
     } catch (err) {
@@ -1050,7 +1080,7 @@ app.get('/wishlist', isAuthenticatedAndNotAdmin, (req, res) => {
 });
 
 // Route per aggiungere un prodotto alla wishlist
-app.post('/aggiungi_wishlist', isAuthenticatedAndNotAdmin, (req, res) => {
+app.post('/aggiungi_wishlist', isAuthenticatedAndNotAdmin, async (req, res) => {
     const { productId, quantity } = req.body;
     const emailUtente = req.session.user.Email;
 
@@ -1058,31 +1088,41 @@ app.post('/aggiungi_wishlist', isAuthenticatedAndNotAdmin, (req, res) => {
         return res.status(400).json({ success: false, message: 'ID o quantità non validi.' });
     }
 
-    db.get('SELECT Quantita FROM Prodotti WHERE ID = ?', [productId], (err, row) => {
-        if (err || !row) {
-            console.error('Errore nel recupero del prodotto:', err?.message);
-            return res.status(500).json({ success: false, message: 'Errore interno del server.' });
+    try {
+        const row = await new Promise((resolve, reject) => {
+            db.get('SELECT Quantita FROM Prodotti WHERE ID = ?', [productId], (err, row) => {
+                if (err) reject(err);
+                else resolve(row);
+            });
+        });
+
+        if (!row) {
+            return res.json({ success: false, message: 'Prodotto non trovato.' });
         }
 
         if (row.Quantita < quantity) {
             return res.json({ success: false, message: 'Quantità non disponibile in magazzino.' });
         }
 
-        db.run(
-            `INSERT INTO Wishlist (EmailUtente, SessionID, ID_Prodotto, Quantita) 
-             VALUES (?, ?, ?, ?) 
-             ON CONFLICT(EmailUtente, SessionID, ID_Prodotto) 
-             DO UPDATE SET Quantita = Quantita + ?`,
-            [emailUtente, req.session.sessionID, productId, quantity, quantity],
-            (err) => {
-                if (err) {
-                    console.error('Errore nell\'aggiunta alla wishlist:', err.message);
-                    return res.status(500).json({ success: false, message: 'Errore interno del server.' });
+        await new Promise((resolve, reject) => {
+            db.run(
+                `INSERT INTO Wishlist (EmailUtente, SessionID, ID_Prodotto, Quantita) 
+                 VALUES (?, ?, ?, ?) 
+                 ON CONFLICT(EmailUtente, ID_Prodotto) 
+                 DO UPDATE SET Quantita = Quantita + excluded.Quantita`,
+                [emailUtente, req.session.sessionID, productId, quantity],
+                (err) => {
+                    if (err) reject(err);
+                    else resolve();
                 }
-                res.json({ success: true, message: 'Prodotto aggiunto alla wishlist!' });
-            }
-        );
-    });
+            );
+        });
+
+        res.json({ success: true, message: 'Prodotto aggiunto alla wishlist!' });
+    } catch (err) {
+        console.error('Errore durante l\'aggiunta alla wishlist:', err.message);
+        res.status(500).json({ success: false, message: 'Errore interno del server.' });
+    }
 });
 
 // Route per spostare un prodotto dalla wishlist al carrello
@@ -1092,8 +1132,8 @@ app.post('/sposta_al_carrello', (req, res) => {
     const sessionID = req.session.sessionID;
 
     db.get(
-        `SELECT Quantita FROM Wishlist WHERE (EmailUtente = ? OR SessionID = ?) AND ID_Prodotto = ?`,
-        [emailUtente, sessionID, productId],
+        `SELECT Quantita FROM Wishlist WHERE EmailUtente = ? AND ID_Prodotto = ?`,
+        [emailUtente, productId],
         (err, row) => {
             if (err || !row) {
                 console.error('Errore nel recupero del prodotto dalla wishlist:', err?.message);
@@ -1105,9 +1145,9 @@ app.post('/sposta_al_carrello', (req, res) => {
             db.run(
                 `INSERT INTO Carrello (EmailUtente, SessionID, ID_Prodotto, Quantita) 
                  VALUES (?, ?, ?, ?) 
-                 ON CONFLICT(EmailUtente, SessionID, ID_Prodotto) 
-                 DO UPDATE SET Quantita = Quantita + ?`,
-                [emailUtente, sessionID, productId, quantita, quantita],
+                 ON CONFLICT(EmailUtente, ID_Prodotto) 
+                 DO UPDATE SET Quantita = Quantita + excluded.Quantita`,
+                [emailUtente, sessionID, productId, quantita],
                 (err) => {
                     if (err) {
                         console.error('Errore nello spostamento al carrello:', err.message);
@@ -1115,8 +1155,8 @@ app.post('/sposta_al_carrello', (req, res) => {
                     }
 
                     db.run(
-                        `DELETE FROM Wishlist WHERE (EmailUtente = ? OR SessionID = ?) AND ID_Prodotto = ?`,
-                        [emailUtente, sessionID, productId],
+                        `DELETE FROM Wishlist WHERE EmailUtente = ? AND ID_Prodotto = ?`,
+                        [emailUtente, productId],
                         (err) => {
                             if (err) {
                                 console.error('Errore nella rimozione dalla wishlist:', err.message);

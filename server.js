@@ -443,9 +443,15 @@ app.get('/area_riservata', isAdmin, (req, res) => {
 });
 
 app.post('/modifica_prodotto', upload.single('immagine'), (req, res) => {
-    const { id, nome, prezzo, quantita, categoria } = req.body;
-    const immagine = req.file ? `${req.file.filename}` : null; 
+    const { id, nome, prezzo, quantita, categoria, nuovaCategoria } = req.body;
+    const immagine = req.file ? `${req.file.filename}` : null;
 
+    // Determina la categoria finale
+    const categoriaFinale = categoria === 'Nuova categoria' ? nuovaCategoria : categoria;
+
+    if (categoria === 'Nuova categoria' && !nuovaCategoria) {
+        return res.status(400).send('Inserire il nome della nuova categoria.');
+    }
     console.log('Prodotto modificato:', req.body);
 
     const query = immagine
@@ -453,15 +459,15 @@ app.post('/modifica_prodotto', upload.single('immagine'), (req, res) => {
         : 'UPDATE Prodotti SET Nome = ?, Prezzo = ?, Quantita = ?, Categoria = ? WHERE ID = ?';
 
     const params = immagine
-        ? [nome, prezzo, quantita, categoria, immagine, id]
-        : [nome, prezzo, quantita, categoria, id];
+        ? [nome, prezzo, quantita, categoriaFinale, immagine, id]
+        : [nome, prezzo, quantita, categoriaFinale, id];
 
     db.run(query, params, (err) => {
         if (err) {
             console.error('Errore nella modifica del prodotto:', err.message);
             return res.status(500).send('Errore nella modifica del prodotto');
         }
-        res.redirect('/area_riservata');
+        res.redirect('/gestione_prodotti');
     });
 });
 
@@ -1239,7 +1245,14 @@ app.get('/modifica_prodotto/:id', isAdmin, (req, res) => {
         if (!product) {
             return res.status(404).send('Prodotto non trovato');
         }
-        res.render('modifica_prodotto', { user: req.session.user, product });
+
+        db.all('SELECT DISTINCT Categoria AS Nome FROM Prodotti', (err, categorie) => {
+            if (err) {
+                console.error('Errore nel recupero delle categorie:', err.message);
+                return res.status(500).send('Errore nel recupero delle categorie.');
+            }
+            res.render('modifica_prodotto', { user: req.session.user, product, categorie });
+        });
     });
 });
 

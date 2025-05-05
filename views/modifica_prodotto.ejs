@@ -32,7 +32,17 @@
             </div>
             <div class="mb-3">
                 <label for="productCategory" class="form-label">Categoria</label>
-                <input type="text" class="form-control" id="productCategory" name="categoria" value="<%= product.Categoria %>" required>
+                <select class="form-select" id="productCategory" name="categoria" required onchange="toggleNewCategoryInput(this)">
+                    <option value="" disabled>Seleziona una categoria</option>
+                    <% categorie.forEach(categoria => { %>
+                        <option value="<%= categoria.Nome %>" <%= categoria.Nome === product.Categoria ? 'selected' : '' %>><%= categoria.Nome %></option>
+                    <% }); %>
+                    <option value="Nuova categoria">Nuova categoria</option>
+                </select>
+            </div>
+            <div class="mb-3" id="newCategoryDiv" style="display: none;">
+                <label for="newCategory" class="form-label">Nuova Categoria</label>
+                <input type="text" class="form-control" id="newCategory" name="nuovaCategoria">
             </div>
             <div class="mb-3">
                 <label for="productImage" class="form-label">Immagine</label>
@@ -45,5 +55,18 @@
         </form>
     </div>
     <%- include('footer') %>
+
+    <script>
+        function toggleNewCategoryInput(select) {
+            const newCategoryDiv = document.getElementById('newCategoryDiv');
+            if (select.value === 'Nuova categoria') {
+                newCategoryDiv.style.display = 'block';
+                document.getElementById('newCategory').required = true;
+            } else {
+                newCategoryDiv.style.display = 'none';
+                document.getElementById('newCategory').required = false;
+            }
+        }
+    </script>
 </body>
 </html>

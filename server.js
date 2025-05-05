@@ -18,12 +18,19 @@ const storage = multer.diskStorage({
         cb(null, path.join(__dirname, 'public/images/prodotti')); // Cartella di destinazione
     },
     filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, uniqueSuffix + path.extname(file.originalname)); // Nome univoco per evitare conflitti
+        const nomeProdotto = req.body.nome.replace(/\s+/g, '_').toLowerCase(); // Rimuove spazi e converte in minuscolo
+        const ext = path.extname(file.originalname); // Estensione del file
+        const index = req.fileIndex || 0; // Indice per immagini multiple
+        req.fileIndex = (req.fileIndex || 0) + 1; // Incrementa l'indice
+        const fileName = index === 0 ? `${nomeProdotto}${ext}` : `${nomeProdotto}_${index}${ext}`;
+        cb(null, fileName);
     }
 });
 
-const upload = multer({ storage });
+const upload = multer({
+    storage: storage,
+    limits: { files: 10 }, // Limite massimo di 10 immagini
+});
 
 // Configura il motore di template EJS
 app.set('view engine', 'ejs');
@@ -31,6 +38,7 @@ app.set('views', path.join(__dirname, 'views'));
 
 // Serve i file statici dalla cartella 'public'
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/images', express.static(path.join(__dirname, 'public/images')));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json()); // middleware per analizzare il corpo delle richieste JSON
 app.use(express.json());
@@ -313,10 +321,10 @@ app.post('/accesso', (req, res) => {
                         await new Promise((resolve, reject) => {
                             db.run(
                                 `INSERT INTO Carrello (EmailUtente, SessionID, ID_Prodotto, Quantita)
-                                 VALUES (?, ?, ?, ?)
+                                 VALUES (?, '', ?, ?)
                                  ON CONFLICT(EmailUtente, ID_Prodotto)
                                  DO UPDATE SET Quantita = Quantita + excluded.Quantita`,
-                                [row.Email, sessionID, item.ID_Prodotto, item.Quantita],
+                                [row.Email, item.ID_Prodotto, item.Quantita],
                                 (err) => {
                                     if (err) reject(err);
                                     else resolve();
@@ -438,7 +446,7 @@ app.post('/modifica_prodotto', upload.single('immagine'), (req, res) => {
     const { id, nome, prezzo, quantita, categoria } = req.body;
     const immagine = req.file ? `${req.file.filename}` : null; 
 
-    console.log('Dati ricevuti:', req.body);
+    console.log('Prodotto modificato:', req.body);
 
     const query = immagine
         ? 'UPDATE Prodotti SET Nome = ?, Prezzo = ?, Quantita = ?, Categoria = ?, Immagine = ? WHERE ID = ?'
@@ -706,8 +714,6 @@ app.post('/aggiungi_al_carrello', async (req, res) => {
         }
 
         const emailUtente = req.session.user ? req.session.user.Email : `guest-${req.session.sessionID}`;
-
-        console.log({ emailUtente, sessionID: req.session.sessionID, productId, quantity });
 
         await new Promise((resolve, reject) => {
             db.run(
@@ -1261,27 +1267,69 @@ app.get('/magazzino', isAdmin, (req, res) => {
 
 // Route per la pagina di aggiunta prodotto
 app.get('/aggiungi_prodotto', isAdmin, (req, res) => {
-    res.render('aggiungi_prodotto', { user: req.session.user });
+    db.all('SELECT DISTINCT Categoria AS Nome FROM Prodotti', (err, categorie) => {
+        if (err) {
+            console.error('Errore nel recupero delle categorie:', err.message);
+            return res.status(500).send('Errore nel recupero delle categorie.');
+        }
+        res.render('aggiungi_prodotto', { user: req.session.user, categorie });
+    });
 });
 
 // Route per gestire l'aggiunta di un nuovo prodotto
-app.post('/aggiungi_prodotto', isAdmin, upload.single('immagine'), (req, res) => {
-    const { nome, prezzo, quantita, categoria, descrizione } = req.body;
-    const immagine = req.file ? `${req.file.filename}` : null;
+app.post('/aggiungi_prodotto', isAdmin, upload.array('immagini', 10), (req, res) => {
+    const { nome, prezzo, quantita, categoria, descrizione, nuovaCategoria } = req.body;
+    const immagini = req.files; // Array di file caricati
 
-    if (!nome || !prezzo || !quantita || !categoria || !descrizione || !immagine) {
+    if (!nome || !prezzo || !quantita || !descrizione || immagini.length === 0) {
         return res.status(400).send('Tutti i campi sono obbligatori.');
     }
 
+    const categoriaFinale = categoria === 'Nuova categoria' ? nuovaCategoria : categoria;
+
+    if (categoria === 'Nuova categoria' && !nuovaCategoria) {
+        return res.status(400).send('Inserire il nome della nuova categoria.');
+    }
+
+    // Salva solo la prima immagine nel database
+    const immaginePrincipale = immagini[0].filename;
+
+    // Rinomina le altre immagini con il formato nomeprodotto-1.jpg, nomeprodotto-2.jpg, ecc.
+    immagini.slice(1).forEach((file, index) => {
+        const nomeProdotto = nome.replace(/\s+/g, '_').toLowerCase(); // Rimuove spazi e converte in minuscolo
+        const ext = path.extname(file.originalname); // Estensione del file
+        const nuovoNome = `${nomeProdotto}-${index + 1}${ext}`;
+        const vecchioPercorso = path.join(__dirname, 'public/images/prodotti', file.filename);
+        const nuovoPercorso = path.join(__dirname, 'public/images/prodotti', nuovoNome);
+
+        // Rinomina il file
+        fs.renameSync(vecchioPercorso, nuovoPercorso);
+    });
+
+    // Inseriamo il prodotto nel database con solo la prima immagine
     db.run(
         `INSERT INTO Prodotti (Nome, Prezzo, Quantita, Categoria, Immagine, Descrizione) 
          VALUES (?, ?, ?, ?, ?, ?)`,
-        [nome, prezzo, quantita, categoria, immagine, descrizione],
-        (err) => {
+        [nome, prezzo, quantita, categoriaFinale, immaginePrincipale, descrizione],
+        function (err) {
             if (err) {
                 console.error('Errore durante l\'aggiunta del prodotto:', err.message);
                 return res.status(500).send('Errore durante l\'aggiunta del prodotto.');
             }
+
+            // Log del prodotto appena aggiunto
+            console.log('Nuovo prodotto aggiunto:');
+            console.log({
+                ID: this.lastID,
+                Nome: nome,
+                Prezzo: prezzo,
+                Quantita: quantita,
+                Categoria: categoriaFinale,
+                Immagine: immaginePrincipale,
+                Descrizione: descrizione
+            });
+
+            // Reindirizza alla pagina di gestione prodotti
             res.redirect('/gestione_prodotti');
         }
     );

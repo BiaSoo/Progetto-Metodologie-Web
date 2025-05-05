@@ -33,16 +33,16 @@ INSERT OR IGNORE INTO Prodotti (Nome, Prezzo, Quantita, Categoria, Immagine, Des
     ('Ignatia Amara 30CH', 6.99, 100, 'Omeopatici', 'ignatia.jpg', "Rimedio per stress e ansia."),
     ('Apis Mellifica 30CH', 6.99, 100, 'Omeopatici', 'apis.jpg', "Rimedio per gonfiori e punture."),
     ('Sulphur 30CH', 6.99, 100, 'Omeopatici', 'sulphur.jpg', "Rimedio per problemi cutanei."),
-    ('Chicco Ciuccio Physio Soft 0-6 mesi', 5.99, 100, 'Prima_Infanzia', 'chicco-ciuccio.jpg', "Ciuccio in silicone morbido."),
-    ('Termometro Digitale per Bambini', 12.99, 50, 'Prima_Infanzia', 'termometro-bambini.jpg', "Termometro digitale rapido."),
-    ('Biberon Avent Natural 260ml', 10.99, 100, 'Prima_Infanzia', 'biberon-avent.jpg', "Biberon con tettarella naturale."),
-    ('Bagnoschiuma Neutro Roberts Baby 500ml', 6.49, 100, 'Prima_Infanzia', 'bagnoschiuma-baby.jpg', "Bagnoschiuma delicato per neonati."),
-    ('Salviettine Pampers Sensitive', 3.99, 200, 'Prima_Infanzia', 'salviettine-pampers.jpg', "Salviettine umidificate per pelli sensibili."),
-    ('Crema Cambio Fissan 100ml', 4.99, 100, 'Prima_Infanzia', 'crema-fissan.jpg', "Crema protettiva per il cambio pannolino."),
-    ('Seggiolino Auto Chicco', 149.99, 20, 'Prima_Infanzia', 'seggiolino-chicco.jpg', "Seggiolino auto per bambini 0-12 anni."),
-    ('Pannolini Pampers Progressi Taglia 3', 19.99, 50, 'Prima_Infanzia', 'pannolini-pampers.jpg', "Pannolini per neonati."),
-    ('Giocattolo Sonaglio Fisher-Price', 9.99, 100, 'Prima_Infanzia', 'sonaglio-fisher.jpg', "Sonaglio per neonati."),
-    ('Latte in Polvere Aptamil 1', 24.99, 50, 'Prima_Infanzia', 'aptamil.jpg', "Latte in polvere per neonati."),
+    ('Chicco Ciuccio Physio Soft 0-6 mesi', 5.99, 100, 'Prima Infanzia', 'chicco-ciuccio.jpg', "Ciuccio in silicone morbido."),
+    ('Termometro Digitale per Bambini', 12.99, 50, 'Prima Infanzia', 'termometro-bambini.jpg', "Termometro digitale rapido."),
+    ('Biberon Avent Natural 260ml', 10.99, 100, 'Prima Infanzia', 'biberon-avent.jpg', "Biberon con tettarella naturale."),
+    ('Bagnoschiuma Neutro Roberts Baby 500ml', 6.49, 100, 'Prima Infanzia', 'bagnoschiuma-baby.jpg', "Bagnoschiuma delicato per neonati."),
+    ('Salviettine Pampers Sensitive', 3.99, 200, 'Prima Infanzia', 'salviettine-pampers.jpg', "Salviettine umidificate per pelli sensibili."),
+    ('Crema Cambio Fissan 100ml', 4.99, 100, 'Prima Infanzia', 'crema-fissan.jpg', "Crema protettiva per il cambio pannolino."),
+    ('Seggiolino Auto Chicco', 149.99, 20, 'Prima Infanzia', 'seggiolino-chicco.jpg', "Seggiolino auto per bambini 0-12 anni."),
+    ('Pannolini Pampers Progressi Taglia 3', 19.99, 50, 'Prima Infanzia', 'pannolini-pampers.jpg', "Pannolini per neonati."),
+    ('Giocattolo Sonaglio Fisher-Price', 9.99, 100, 'Prima Infanzia', 'sonaglio-fisher.jpg', "Sonaglio per neonati."),
+    ('Latte in Polvere Aptamil 1', 24.99, 50, 'Prima Infanzia', 'aptamil.jpg', "Latte in polvere per neonati."),
     ('Shampoo Antiforfora Head & Shoulders 400ml', 7.99, 100, 'Capelli', 'shampoo-antiforfora.jpg', "Shampoo antiforfora."),
     ('Balsamo Pantene Pro-V Rigenera e Protegge 200ml', 4.99, 100, 'Capelli', 'balsamo-pantene.jpg', "Balsamo nutriente."),
     ('Olio di Argan per Capelli 100ml', 14.99, 50, 'Capelli', 'olio-argan.jpg', "Olio nutriente per capelli secchi."),
@@ -78,8 +78,8 @@ INSERT OR IGNORE INTO Prodotti (Nome, Prezzo, Quantita, Categoria, Immagine, Des
 -- Popolamento della tabella Ordini
 INSERT OR IGNORE INTO Ordini (ID_Ordine, EmailUtente, Indirizzo, NumeroDiTelefono, Data, Totale) VALUES
     (1, 'user@example.com', 'Via Milano 2', '0987654321', '2025-04-01', 45.98),
-    (2, 'gabriele@gmail.com', 'Via Prova 3', '1122334455', '2025-04-15', 19.99),
-    (3, 'gabriele@gmail.com', 'Via Prova 3', '1122334455', '2025-04-20', 32.39);
+    (2, 'gabriele@gmail.com', 'Via Roma 3', '1122334455', '2025-04-15', 19.99),
+    (3, 'gabriele@gmail.com', 'Via Roma 3', '1122334455', '2025-04-20', 32.39);
 
 -- Popolamento della tabella Dettagli_Ordine
 INSERT OR IGNORE INTO Dettagli_Ordine (ID_Ordine, ID_Prodotto, Quantita) VALUES

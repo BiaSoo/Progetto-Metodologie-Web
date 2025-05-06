@@ -1348,6 +1348,24 @@ app.post('/aggiungi_prodotto', isAdmin, upload.array('immagini', 10), (req, res)
     );
 });
 
+// Route per la pagina "Lavora con noi"
+app.get('/lavora-con-noi', (req, res) => {
+    res.render('lavora_con_noi', { user: req.session.user });
+});
+
+// Route per gestire l'invio del modulo "Lavora con noi"
+app.post('/lavora-con-noi',  (req, res) => {
+    const { nome, email, telefono, messaggio } = req.body;
+
+    // Salva i dati o invia una notifica (esempio di log)
+    console.log('Nuova candidatura ricevuta:');
+    console.log(`Email: ${email}`);
+    console.log(`Telefono: ${telefono}`);
+    console.log(`Messaggio: ${messaggio}`);
+
+    res.send('Grazie per aver inviato la tua candidatura! Ti contatteremo a breve.');
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server in esecuzione su http://localhost:${PORT}`);

@@ -1354,16 +1354,63 @@ app.get('/lavora-con-noi', (req, res) => {
 });
 
 // Route per gestire l'invio del modulo "Lavora con noi"
-app.post('/lavora-con-noi',  (req, res) => {
+app.post('/lavora-con-noi', (req, res) => {
     const { nome, email, telefono, messaggio } = req.body;
 
-    // Salva i dati o invia una notifica (esempio di log)
-    console.log('Nuova candidatura ricevuta:');
-    console.log(`Email: ${email}`);
-    console.log(`Telefono: ${telefono}`);
-    console.log(`Messaggio: ${messaggio}`);
+    if (!nome || !email || !telefono || !messaggio) {
+        return res.status(400).json({ success: false, message: 'Tutti i campi sono obbligatori.' });
+    }
 
-    res.send('Grazie per aver inviato la tua candidatura! Ti contatteremo a breve.');
+    const filePath = path.join(__dirname, 'candidature.json');
+
+    fs.readFile(filePath, 'utf8', (err, data) => {
+        if (err) {
+            console.error('Errore durante la lettura del file candidature:', err.message);
+            return res.status(500).json({ success: false, message: 'Errore durante il salvataggio della candidatura.' });
+        }
+
+        let candidature = [];
+        try {
+            candidature = JSON.parse(data || '[]');
+        } catch (parseError) {
+            console.error('Errore durante il parsing del file candidature:', parseError.message);
+            return res.status(500).json({ success: false, message: 'Errore durante il salvataggio della candidatura.' });
+        }
+
+        candidature.push({ nome, email, telefono, messaggio });
+
+        console.log('Nuova candidatura ricevuta!');
+
+        fs.writeFile(filePath, JSON.stringify(candidature, null, 2), (err) => {
+            if (err) {
+                console.error('Errore durante il salvataggio della candidatura:', err.message);
+                return res.status(500).json({ success: false, message: 'Errore durante il salvataggio della candidatura.' });
+            }
+
+            res.json({ success: true, message: 'Grazie per aver inviato la tua candidatura! Ti contatteremo a breve.' });
+        });
+    });
+});
+
+app.get('/gestione_candidature', isAdmin, (req, res) => {
+    const filePath = path.join(__dirname, 'candidature.json');
+
+    // Controlla se il file esiste
+    if (!fs.existsSync(filePath)) {
+        // Crea il file con un array vuoto
+        fs.writeFileSync(filePath, JSON.stringify([], null, 2));
+    }
+
+    // Leggi il file JSON delle candidature
+    fs.readFile(filePath, 'utf8', (err, data) => {
+        if (err) {
+            console.error('Errore nel caricamento delle candidature:', err.message);
+            return res.status(500).send('Errore nel caricamento delle candidature.');
+        }
+
+        const candidature = JSON.parse(data || '[]');
+        res.render('gestione_candidature', { user: req.session.user, candidature });
+    });
 });
 
 const PORT = process.env.PORT || 3000;

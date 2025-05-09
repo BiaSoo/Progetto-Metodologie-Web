@@ -158,11 +158,51 @@ db.serialize(() => {
 
 // Route per la pagina principale
 app.get('/', (req, res) => {
-    db.all('SELECT * FROM Prodotti WHERE Disponibile = 1', (err, rows) => {
+    const queryTopSold = `
+        SELECT P.*, SUM(DO.Quantita) AS VenditeTotali
+        FROM Prodotti P
+        JOIN Dettagli_Ordine DO ON P.ID = DO.ID_Prodotto
+        GROUP BY P.ID
+        ORDER BY VenditeTotali DESC
+        LIMIT 6
+    `;
+
+    const queryFillGaps = `
+        SELECT *
+        FROM Prodotti
+        WHERE ID NOT IN (
+            SELECT P.ID
+            FROM Prodotti P
+            JOIN Dettagli_Ordine DO ON P.ID = DO.ID_Prodotto
+            GROUP BY P.ID
+            ORDER BY SUM(DO.Quantita) DESC
+            LIMIT 6
+        )
+        ORDER BY ID ASC
+        LIMIT ?
+    `;
+
+    db.all(queryTopSold, [], (err, topSoldProducts) => {
         if (err) {
-            return res.status(500).send('Errore nel recupero dei prodotti');
+            console.error('Errore nel recupero dei prodotti più venduti:', err.message);
+            return res.status(500).send('Errore interno del server.');
         }
-        res.render('index', { products: rows, user: req.session.user });
+
+        const remainingSlots = 6 - topSoldProducts.length;
+
+        if (remainingSlots > 0) {
+            db.all(queryFillGaps, [remainingSlots], (err, fillProducts) => {
+                if (err) {
+                    console.error('Errore nel recupero dei prodotti per riempire i buchi:', err.message);
+                    return res.status(500).send('Errore interno del server.');
+                }
+
+                const products = [...topSoldProducts, ...fillProducts];
+                res.render('index', { products, user: req.session.user });
+            });
+        } else {
+            res.render('index', { products: topSoldProducts, user: req.session.user });
+        }
     });
 });
 

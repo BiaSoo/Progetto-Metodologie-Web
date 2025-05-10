@@ -51,10 +51,33 @@
                 <div class="mb-3">
                     <label for="metodoPagamento" class="form-label">Metodo</label>
                     <select class="form-select" id="metodoPagamento" name="metodoPagamento" required>
+                        <option value="bonifico">Bonifico Bancario</option>
                         <option value="carta">Carta di Credito</option>
                         <option value="paypal">PayPal</option>
-                        <option value="bonifico">Bonifico Bancario</option>
+                        <option value="contanti">Contanti alla consegna (E' prevista una commissione aggiuntiva di 2€ non inclusa nel totale)</option>
                     </select>
+                </div>
+                <div id="creditCardDetails" style="display: none;">
+                    <div class="mb-3">
+                        <label for="intestatario" class="form-label">Intestatario Carta</label>
+                        <input type="text" class="form-control" id="intestatario" name="intestatario" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="numeroCarta" class="form-label">Numero Carta</label>
+                        <input type="text" class="form-control" id="numeroCarta" name="numeroCarta" maxlength="19" placeholder="1234 5678 9012 3456" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="scadenza" class="form-label">Scadenza (MM/YY)</label>
+                        <input type="text" class="form-control" id="scadenza" name="scadenza" pattern="(0[1-9]|1[0-2])\/\d{2}" placeholder="MM/YY" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="cvv" class="form-label">CVV</label>
+                        <input type="text" class="form-control" id="cvv" name="cvv" maxlength="3" pattern="\d{3}" required>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="salvaCarta" name="salvaCarta">
+                        <label class="form-check-label" for="salvaCarta">Memorizza i dettagli per i prossimi pagamenti</label>
+                    </div>
                 </div>
             </div>
             <div class="text-center mt-4">
@@ -63,5 +86,45 @@
         </form>
     </div>
     <%- include('footer') %>
+    <script>
+        document.getElementById('metodoPagamento').addEventListener('change', function () {
+            const creditCardDetails = document.getElementById('creditCardDetails');
+            creditCardDetails.style.display = this.value === 'carta' ? 'block' : 'none';
+        });
+
+        document.getElementById('numeroCarta').addEventListener('input', function () {
+            this.value = this.value.replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim();
+        });
+
+        const scadenzaInput = document.getElementById('scadenza');
+        const errorMessage = document.createElement('div');
+        errorMessage.style.color = 'red';
+        errorMessage.style.fontSize = '0.9em';
+        errorMessage.style.display = 'none';
+        scadenzaInput.parentNode.appendChild(errorMessage);
+
+        scadenzaInput.addEventListener('input', function () {
+            // Aggiunge automaticamente la slash
+            this.value = this.value
+                .replace(/\D/g, '') // Rimuove caratteri non numerici
+                .replace(/^(\d{2})(\d{1,2})$/, '$1/$2'); // Aggiunge la slash dopo i primi due numeri
+
+            // Controlla se la data è valida
+            const [month, year] = this.value.split('/').map(Number);
+            const currentDate = new Date();
+            const currentMonth = currentDate.getMonth() + 1; // I mesi in JavaScript partono da 0
+            const currentYear = currentDate.getFullYear() % 100; // Prende solo le ultime due cifre dell'anno
+
+            if (
+                this.value.length === 5 && // Controlla che il formato sia MM/YY
+                (isNaN(month) || isNaN(year) || month < 1 || month > 12 || year < currentYear || (year === currentYear && month < currentMonth))
+            ) {
+                errorMessage.textContent = 'La data di scadenza è antecedente a quella attuale.';
+                errorMessage.style.display = 'block';
+            } else {
+                errorMessage.style.display = 'none';
+            }
+        });
+    </script>
 </body>
 </html>

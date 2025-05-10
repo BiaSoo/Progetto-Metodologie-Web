@@ -1,6 +1,6 @@
 /* Imposta una larghezza minima di 1000px per il layout */
 body {
-    min-width: 1000px; /* Larghezza minima per il layout */
+    min-width: 1000px; 
     overflow-x: 0px; 
 }
 
@@ -8,58 +8,58 @@ body {
 @media (min-width: 1000px) {
     .navbar, .footer, .content {
         width: 100%;
-        max-width: auto; /* Permette al layout di occupare il 100% della larghezza */
-        margin: 0 auto; /* Centra il contenuto */
+        max-width: auto; 
+        margin: 0 auto;
     }
 }
 
 /* Assicura che la seconda navbar non venga nascosta dalla prima */
 .categories-bar {
-    margin-top: auto; /* Spazio sufficiente per evitare sovrapposizioni */
-    z-index: 999; /* Assicura che sia visibile sopra altri elementi */
-    padding: 5px 0; /* Riduce il padding verticale */
-    background-color: #f8f9fa; /* Colore di sfondo leggero */
-    border-top: 1px solid #e0e0e0; /* Aggiunge un bordo superiore sottile */
-    border-bottom: 1px solid #e0e0e0; /* Aggiunge un bordo inferiore sottile */
-    overflow-x: auto; /* Permette lo scorrimento orizzontale su schermi piccoli */
-    white-space: nowrap; /* Evita che le categorie vadano a capo */
+    margin-top: auto; 
+    z-index: 999; 
+    padding: 5px 0; 
+    background-color: #f8f9fa; 
+    border-top: 1px solid #e0e0e0; 
+    border-bottom: 1px solid #e0e0e0; 
+    overflow-x: auto; 
+    white-space: nowrap; 
 }
 
 /* Stile migliorato per i bottoni delle categorie */
 .categories-bar .category-box {
-    font-size: 0.85rem; /* Riduce la dimensione del testo */
-    padding: 8px 12px; /* Riduce il padding interno */
-    margin: 3px 6px; /* Riduce lo spazio tra i blocchi */
-    border-radius: 4px; /* Angoli arrotondati più sottili */
+    font-size: 0.85rem; 
+    padding: 8px 12px; 
+    margin: 3px 6px; 
+    border-radius: 4px; 
     text-align: center;
-    transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease; /* Effetto hover fluido */
+    transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease; 
     display: inline-block;
-    white-space: nowrap; /* Evita che il testo vada a capo */
+    white-space: nowrap; 
 }
 
 .categories-bar .category-box:hover {
-    background-color: var(--hover-color); /* Colore di sfondo al passaggio del mouse */
-    color: #fff; /* Colore del testo al passaggio del mouse */
-    box-shadow: 0 0 8px var(--hover-color); /* Aggiunge un'ombra leggera */
+    background-color: var(--hover-color); 
+    color: #fff; 
+    box-shadow: 0 0 8px var(--hover-color); 
 }
 
 /* Stile migliorato per i divisori verticali */
 .categories-bar .vertical-divider {
     width: 1px;
-    height: 15px; /* Altezza ridotta per un aspetto più compatto */
+    height: 15px; 
     background-color: #ddd;
-    margin: 0 5px; /* Spazio ridotto ai lati del divisore */
+    margin: 0 5px; 
     align-self: center;
 }
 
 .categories-bar .vertical-divider-tall {
-    height: 25px; /* Altezza leggermente maggiore per il divisore finale */
+    height: 25px; 
 }
 
 /* Disabilita il ridimensionamento sotto i 1000px */
 @media (max-width: 999px) {
     .navbar, .footer, .content {
-        width: 1000px; /* Mantiene la larghezza minima */
+        width: 1000px; 
     }
 }
 
@@ -207,13 +207,13 @@ body {
 /* Cambia il colore delle frecce */
 .carousel-control-prev-icon,
 .carousel-control-next-icon {
-    background-color: #198754; /* Verde */
+    background-color: #198754; 
     border-radius: 50%;
 }
 
 /* Cambia il colore dei pallini */
 .carousel-indicators [data-bs-target] {
-    background-color: #198754; /* Verde */
+    background-color: #198754; 
 }
 
 .carousel-indicators .active {
@@ -226,7 +226,7 @@ body {
     border-radius: 5px;
     overflow: hidden;
     transition: all 0.3s ease; 
-    height: 350px; /* Altezza fissa per tutte le card */
+    height: 350px; 
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -247,7 +247,7 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    height: calc(100% - 200px); /* Altezza rimanente dopo l'immagine */
+    height: calc(100% - 200px); 
 }
 
 .card-title {
@@ -255,7 +255,7 @@ body {
     margin-bottom: 10px;
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap; /* Mantiene il titolo su una sola riga */
+    white-space: nowrap; 
 }
 
 .card-text {
@@ -264,7 +264,7 @@ body {
     overflow: hidden;
     text-overflow: ellipsis;
     display: -webkit-box;
-    -webkit-line-clamp: 3; /* Mostra massimo 3 righe */
+    -webkit-line-clamp: 3; 
     -webkit-box-orient: vertical;
 }
 
@@ -462,11 +462,11 @@ body.modifica_account h1 {
         flex-wrap: nowrap;
         align-items: center;
         justify-content: space-between;
-        padding: 0 15px; /* Aggiunge spazio ai lati */
+        padding: 0 15px; 
     }
 
     .navbar-brand {
-        flex-shrink: 0; /* Impedisce al logo di ridimensionarsi */
+        flex-shrink: 0; 
         margin-right: 10px;
     }
 
@@ -475,7 +475,7 @@ body.modifica_account h1 {
         display: flex;
         justify-content: center;
         margin: 0 10px;
-        max-width: 400px; /* Limita la larghezza della barra di ricerca */
+        max-width: 400px; 
     }
 
     .search-bar-container form {
@@ -497,7 +497,7 @@ body.modifica_account h1 {
         flex-wrap: nowrap;
         align-items: center;
         justify-content: flex-end;
-        flex-shrink: 0; /* Impedisce ai bottoni di comprimersi */
+        flex-shrink: 0; 
     }
 
     .ms-auto a {
@@ -512,18 +512,18 @@ body.modifica_account h1 {
         flex-wrap: nowrap;
         align-items: center;
         justify-content: center;
-        overflow-x: auto; /* Permette lo scorrimento orizzontale se necessario */
+        overflow-x: auto; 
         padding: 0 15px;
         height: auto;
     }
 
     .category-box {
-        flex-shrink: 0; /* Impedisce che le categorie si comprimano */
+        flex-shrink: 0; 
         margin: 0 10px;
-        white-space: nowrap; /* Evita che il testo vada a capo */
+        white-space: nowrap; 
     }
 
     .vertical-divider {
-        flex-shrink: 0; /* Impedisce che i divisori si comprimano */
+        flex-shrink: 0;
     }
 }

@@ -124,6 +124,16 @@ db.serialize(() => {
         FOREIGN KEY(ID_Prodotto) REFERENCES Prodotti(ID)
     )`);
 
+    db.run(`CREATE TABLE IF NOT EXISTS CartePagamento (
+        ID INTEGER PRIMARY KEY AUTOINCREMENT,
+        EmailUtente TEXT NOT NULL,
+        Intestatario TEXT NOT NULL,
+        NumeroCarta TEXT NOT NULL,
+        Scadenza TEXT NOT NULL,
+        CVV TEXT NOT NULL,
+        FOREIGN KEY(EmailUtente) REFERENCES Utenti(Email)
+    )`);
+
 
     // Hash della password dell'amministratore e dell'utente
     bcrypt.hash('admin', saltRounds, (err, adminHash) => {
@@ -697,9 +707,9 @@ app.get('/omeopatici', (req, res) => {
 });
 
 app.get('/bambini', (req, res) => {
-    db.all('SELECT * FROM Prodotti WHERE Categoria = ? AND Disponibile = 1', ['Bambini'], (err, rows) => {
+    db.all('SELECT * FROM Prodotti WHERE Categoria = ? AND Disponibile = 1', ['Prima Infanzia'], (err, rows) => {
         if (err) {
-            return res.status(500).send('Errore nel recupero dei prodotti Bambini');
+            return res.status(500).send('Errore nel recupero dei prodotti Prima Infanzia');
         }
         res.render('bambini', { products: rows, user: req.session.user });
     });
@@ -958,8 +968,41 @@ app.get('/checkout', (req, res) => {
 app.post('/checkout', (req, res) => {
     const emailUtente = req.session.user ? req.session.user.Email : null;
     const sessionID = req.session.sessionID;
-    const { indirizzo, telefono, metodoPagamento } = req.body;
+    const { indirizzo, telefono, metodoPagamento, intestatario, numeroCarta, scadenza, cvv, salvaCarta } = req.body;
 
+    if (metodoPagamento === 'carta') {
+        // Validazione dei dati della carta
+        const numeroCartaPulito = numeroCarta.replace(/\s+/g, '');
+        const [mese, anno] = scadenza.split('/').map(Number);
+        const dataCorrente = new Date();
+        const annoCorrente = dataCorrente.getFullYear() % 100;
+        const meseCorrente = dataCorrente.getMonth() + 1;
+
+        if (numeroCartaPulito.length !== 16 || isNaN(numeroCartaPulito)) {
+            return res.status(400).send('Numero di carta non valido.');
+        }
+        if (isNaN(mese) || isNaN(anno) || anno < annoCorrente || (anno === annoCorrente && mese < meseCorrente)) {
+            return res.status(400).send('La carta è scaduta.');
+        }
+        if (cvv.length !== 3 || isNaN(cvv)) {
+            return res.status(400).send('CVV non valido.');
+        }
+
+        // Salva i dettagli della carta se richiesto
+        if (salvaCarta && emailUtente) {
+            db.run(
+                `INSERT INTO CartePagamento (EmailUtente, Intestatario, NumeroCarta, Scadenza, CVV)
+                 VALUES (?, ?, ?, ?, ?)`,
+                [emailUtente, intestatario, numeroCartaPulito, scadenza, cvv],
+                (err) => {
+                    if (err) {
+                        console.error('Errore durante il salvataggio della carta:', err.message);
+                    }
+                }
+            );
+        }
+    }
+    
     db.all(
         `SELECT C.ID_Prodotto, C.Quantita, P.Prezzo 
          FROM Carrello C 
@@ -1007,44 +1050,8 @@ app.post('/checkout', (req, res) => {
                         });
                     });
 
-                    const magazzinoPromises = cartItems.map(item => {
-                        return new Promise((resolve, reject) => {
-                            db.get(
-                                `SELECT Quantita FROM Prodotti WHERE ID = ?`,
-                                [item.ID_Prodotto],
-                                (err, row) => {
-                                    if (err) {
-                                        return reject(err);
-                                    }
-
-                                    if (row.Quantita < item.Quantita) {
-                                        return reject(new Error(`Quantità insufficiente per il prodotto con ID ${item.ID_Prodotto}`));
-                                    }
-
-                                    db.run(
-                                        `UPDATE Prodotti SET Quantita = Quantita - ? WHERE ID = ?`,
-                                        [item.Quantita, item.ID_Prodotto],
-                                        (err) => {
-                                            if (err) reject(err);
-                                            else resolve();
-                                        }
-                                    );
-                                }
-                            );
-                        });
-                    });
-
-                    Promise.all([...dettagliPromises, ...magazzinoPromises])
+                    Promise.all(dettagliPromises)
                         .then(() => {
-                            // Log riepilogo ordine
-                            console.log(`Ordine effettuato da utente: ${emailUtente}`);
-                            console.log('Prodotti:');
-                            cartItems.forEach(item => {
-                                console.log(`- ID Prodotto: ${item.ID_Prodotto}, Quantità: ${item.Quantita}`);
-                            });
-                            console.log(`Totale ordine: €${totale.toFixed(2)}`);
-                            console.log(`Numero ordine: ${orderId}`);
-
                             db.run(
                                 `DELETE FROM Carrello WHERE (EmailUtente = ? OR SessionID = ?)`,
                                 [emailUtente, sessionID],
@@ -1059,7 +1066,7 @@ app.post('/checkout', (req, res) => {
                             );
                         })
                         .catch((err) => {
-                            console.error('Errore durante l\'inserimento dei dettagli ordine o aggiornamento magazzino:', err.message);
+                            console.error('Errore durante l\'inserimento dei dettagli ordine:', err.message);
                             res.status(500).send('Errore interno del server.');
                         });
                 }

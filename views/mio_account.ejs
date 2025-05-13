@@ -11,12 +11,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.8.1/font/bootstrap-icons.min.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
 </head>
-<body class="mio_account <%= (ordini && ordini.length > 5) ? '' : 'order-fixed-footer' %>">
+<body>
     <%- include('navbar', { user: user }) %>
 
     <div class="container">
-        <div class="row">
-            <!-- Dati utente -->
+        <div class="row">            <!-- Dati utente -->
             <div class="col-md-6">
                 <h1>Il tuo account:</h1>
                 <p><strong>Nome:</strong> <%= user.Nome %></p>
@@ -85,64 +84,71 @@
             }
         }
 
-        document.getElementById('metodoPagamento').addEventListener('change', function () {
-            const creditCardDetails = document.getElementById('creditCardDetails');
-            const isCreditCard = this.value === 'carta';
+        document.addEventListener('DOMContentLoaded', function () {
+            const metodoPagamento = document.getElementById('metodoPagamento');
+            if (metodoPagamento) {
+                metodoPagamento.addEventListener('change', function () {
+                    const creditCardDetails = document.getElementById('creditCardDetails');
+                    const isCreditCard = this.value === 'carta';
 
-            // Mostra o nasconde i dettagli della carta di credito
-            creditCardDetails.style.display = isCreditCard ? 'block' : 'none';
+                    creditCardDetails.style.display = isCreditCard ? 'block' : 'none';
 
-            // Gestisce l'attributo "required" per i campi della carta di credito
-            const creditCardFields = ['intestatario', 'numeroCarta', 'scadenza', 'cvv'];
-            creditCardFields.forEach(fieldId => {
-                const field = document.getElementById(fieldId);
-                if (isCreditCard) {
-                    field.required = true;
-                } else {
-                    field.required = false;
-                    field.value = ''; // Resetta il valore del campo per evitare errori di validazione
-                    field.setCustomValidity(''); // Rimuove eventuali messaggi di errore personalizzati
-                }
-            });
+                    const creditCardFields = ['intestatario', 'numeroCarta', 'scadenza', 'cvv'];
+                    creditCardFields.forEach(fieldId => {
+                        const field = document.getElementById(fieldId);
+                        if (isCreditCard) {
+                            field.required = true;
+                        } else {
+                            field.required = false;
+                            field.value = '';
+                            field.setCustomValidity('');
+                        }
+                    });
+                });
+            }
         });
 
         // Formatta il numero della carta di credito
-        document.getElementById('numeroCarta').addEventListener('input', function () {
-            this.value = this.value.replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim();
-        });
+        const numeroCartaInput = document.getElementById('numeroCarta');
+        if (numeroCartaInput) {
+            numeroCartaInput.addEventListener('input', function () {
+                this.value = this.value.replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim();
+            });
+        }
 
         // Valida la data di scadenza
         const scadenzaInput = document.getElementById('scadenza');
-        const errorMessage = document.createElement('div');
-        errorMessage.style.color = 'red';
-        errorMessage.style.fontSize = '0.9em';
-        errorMessage.style.display = 'none';
-        scadenzaInput.parentNode.appendChild(errorMessage);
+        if (scadenzaInput) {
+            const errorMessage = document.createElement('div');
+            errorMessage.style.color = 'red';
+            errorMessage.style.fontSize = '0.9em';
+            errorMessage.style.display = 'none';
+            scadenzaInput.parentNode.appendChild(errorMessage);
 
-        scadenzaInput.addEventListener('input', function () {
-            // Aggiunge automaticamente la slash
-            this.value = this.value
-                .replace(/\D/g, '') // Rimuove caratteri non numerici
-                .replace(/^(\d{2})(\d{1,2})$/, '$1/$2'); // Aggiunge la slash dopo i primi due numeri
+            scadenzaInput.addEventListener('input', function () {
+                // Aggiunge automaticamente la slash
+                this.value = this.value
+                    .replace(/\D/g, '') // Rimuove caratteri non numerici
+                    .replace(/^(\d{2})(\d{1,2})$/, '$1/$2'); // Aggiunge la slash dopo i primi due numeri
 
-            // Controlla se la data è valida
-            const [month, year] = this.value.split('/').map(Number);
-            const currentDate = new Date();
-            const currentMonth = currentDate.getMonth() + 1; // I mesi in JavaScript partono da 0
-            const currentYear = currentDate.getFullYear() % 100; // Prende solo le ultime due cifre dell'anno
+                // Controlla se la data è valida
+                const [month, year] = this.value.split('/').map(Number);
+                const currentDate = new Date();
+                const currentMonth = currentDate.getMonth() + 1; // I mesi in JavaScript partono da 0
+                const currentYear = currentDate.getFullYear() % 100; // Prende solo le ultime due cifre dell'anno
 
-            if (
-                this.value.length === 5 && // Controlla che il formato sia MM/YY
-                (isNaN(month) || isNaN(year) || month < 1 || month > 12 || year < currentYear || (year === currentYear && month < currentMonth))
-            ) {
-                errorMessage.textContent = 'La data di scadenza è antecedente a quella attuale.';
-                errorMessage.style.display = 'block';
-            } else {
-                errorMessage.style.display = 'none';
-            }
-        });
+                if (
+                    this.value.length === 5 && // Controlla che il formato sia MM/YY
+                    (isNaN(month) || isNaN(year) || month < 1 || month > 12 || year < currentYear || (year === currentYear && month < currentMonth))
+                ) {
+                    errorMessage.textContent = 'La data di scadenza è antecedente a quella attuale.';
+                    errorMessage.style.display = 'block';
+                } else {
+                    errorMessage.style.display = 'none';
+                }
+            });
+        }
     </script>
-
     <%- include('footer') %>
 </body>
 </html>

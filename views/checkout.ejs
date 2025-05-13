@@ -87,6 +87,9 @@
                         <label class="form-check-label" for="salvaCarta">Memorizza i dettagli per i prossimi pagamenti</label>
                     </div>
                 </div>
+                <div id="ibanDetails" style="display: none; margin-top: 10px;">
+                    <p><strong>IBAN per il bonifico:</strong> IT60X0542811101000000123456</p>
+                </div>
             </div>
             <div class="text-center mt-4">
                 <button type="submit" class="btn btn-success">Conferma Ordine</button>
@@ -97,10 +100,15 @@
     <script>
         document.getElementById('metodoPagamento').addEventListener('change', function () {
             const creditCardDetails = document.getElementById('creditCardDetails');
+            const ibanDetails = document.getElementById('ibanDetails');
             const isCreditCard = this.value === 'carta';
+            const isBonifico = this.value === 'bonifico';
 
             // Mostra o nasconde i dettagli della carta di credito
             creditCardDetails.style.display = isCreditCard ? 'block' : 'none';
+
+            // Mostra o nasconde i dettagli dell'IBAN
+            ibanDetails.style.display = isBonifico ? 'block' : 'none';
 
             // Gestisce l'attributo "required" per i campi della carta di credito
             const creditCardFields = ['intestatario', 'numeroCarta', 'scadenza', 'cvv'];

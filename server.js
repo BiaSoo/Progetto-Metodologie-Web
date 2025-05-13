@@ -88,7 +88,7 @@ db.serialize(() => {
         EmailUtente TEXT NOT NULL,
         Indirizzo TEXT NOT NULL,
         NumeroDiTelefono TEXT NOT NULL,
-        Data TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        Data TIMESTAMP DEFAULT (DATETIME('now', 'localtime')),
         Totale REAL NOT NULL,
         PRIMARY KEY(ID_Ordine AUTOINCREMENT),
         FOREIGN KEY(EmailUtente) REFERENCES Utenti(Email)
@@ -548,7 +548,22 @@ app.get('/mio_account', isAuthenticated, (req, res) => {
                 return res.status(500).send('Errore interno del server.');
             }
 
-            res.render('mio_account', { user: req.session.user, ordini });
+            db.all(
+                `SELECT ID, Intestatario, NumeroCarta, Scadenza FROM CartePagamento WHERE EmailUtente = ?`,
+                [emailUtente],
+                (err, savedCards) => {
+                    if (err) {
+                        console.error('Errore nel recupero delle carte salvate:', err.message);
+                        return res.status(500).send('Errore interno del server.');
+                    }
+
+                    res.render('mio_account', {
+                        user: req.session.user,
+                        ordini,
+                        savedCards
+                    });
+                }
+            );
         }
     );
 });
@@ -943,13 +958,25 @@ app.get('/checkout', (req, res) => {
                             return res.status(500).send('Errore interno del server.');
                         }
 
-                        res.render('checkout', {
-                            cartItems,
-                            total: totale,
-                            user: req.session.user,
-                            indirizzo: userInfo ? userInfo.Indirizzo : '',
-                            telefono: userInfo ? userInfo.NumeroDiTelefono : ''
-                        });
+                        db.get(
+                            `SELECT Intestatario, NumeroCarta, Scadenza, CVV FROM CartePagamento WHERE EmailUtente = ? ORDER BY ID DESC LIMIT 1`,
+                            [emailUtente],
+                            (err, savedCardDetails) => {
+                                if (err) {
+                                    console.error('Errore nel recupero dei dettagli della carta:', err.message);
+                                    return res.status(500).send('Errore interno del server.');
+                                }
+
+                                res.render('checkout', {
+                                    cartItems,
+                                    total: totale,
+                                    user: req.session.user,
+                                    indirizzo: userInfo ? userInfo.Indirizzo : '',
+                                    telefono: userInfo ? userInfo.NumeroDiTelefono : '',
+                                    savedCardDetails
+                                });
+                            }
+                        );
                     }
                 );
             } else {
@@ -958,7 +985,8 @@ app.get('/checkout', (req, res) => {
                     total: totale,
                     user: req.session.user,
                     indirizzo: '',
-                    telefono: ''
+                    telefono: '',
+                    savedCardDetails: null
                 });
             }
         }
@@ -990,19 +1018,37 @@ app.post('/checkout', (req, res) => {
 
         // Salva i dettagli della carta se richiesto
         if (salvaCarta && emailUtente) {
-            db.run(
-                `INSERT INTO CartePagamento (EmailUtente, Intestatario, NumeroCarta, Scadenza, CVV)
-                 VALUES (?, ?, ?, ?, ?)`,
-                [emailUtente, intestatario, numeroCartaPulito, scadenza, cvv],
-                (err) => {
+            db.get(
+                `SELECT ID FROM CartePagamento WHERE NumeroCarta = ? AND EmailUtente = ?`,
+                [numeroCartaPulito, emailUtente],
+                (err, existingCard) => {
                     if (err) {
-                        console.error('Errore durante il salvataggio della carta:', err.message);
+                        console.error('Errore durante il controllo della carta:', err.message);
+                        return res.status(500).send('Errore interno del server.');
+                    }
+
+                    if (!existingCard) {
+                        // Inserisce la carta solo se non esiste già
+                        db.run(
+                            `INSERT INTO CartePagamento (EmailUtente, Intestatario, NumeroCarta, Scadenza, CVV)
+                             VALUES (?, ?, ?, ?, ?)`,
+                            [emailUtente, intestatario, numeroCartaPulito, scadenza, cvv],
+                            (err) => {
+                                if (err) {
+                                    console.error('Errore durante il salvataggio della carta:', err.message);
+                                }
+                            }
+                        );
                     }
                 }
             );
         }
+    } else if (!indirizzo || !telefono) {
+        // Validazione per metodi di pagamento alternativi
+        return res.status(400).send('Indirizzo e telefono sono obbligatori per completare l\'ordine.');
     }
-    
+
+    // Inserimento ordine indipendentemente dal metodo di pagamento
     db.all(
         `SELECT C.ID_Prodotto, C.Quantita, P.Prezzo 
          FROM Carrello C 
@@ -1458,6 +1504,28 @@ app.get('/gestione_candidature', isAdmin, (req, res) => {
         const candidature = JSON.parse(data || '[]');
         res.render('gestione_candidature', { user: req.session.user, candidature });
     });
+});
+
+app.delete('/rimuovi_carta/:id', isAuthenticated, (req, res) => {
+    const cardId = req.params.id;
+    const emailUtente = req.session.user.Email;
+
+    db.run(
+        `DELETE FROM CartePagamento WHERE ID = ? AND EmailUtente = ?`,
+        [cardId, emailUtente],
+        function (err) {
+            if (err) {
+                console.error('Errore durante la rimozione della carta:', err.message);
+                return res.status(500).send('Errore interno del server.');
+            }
+
+            if (this.changes > 0) {
+                res.status(200).send('Carta rimossa con successo.');
+            } else {
+                res.status(404).send('Carta non trovata.');
+            }
+        }
+    );
 });
 
 const PORT = process.env.PORT || 3000;

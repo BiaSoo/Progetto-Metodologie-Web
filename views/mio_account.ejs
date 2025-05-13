@@ -25,6 +25,29 @@
                 <p><strong>Indirizzo:</strong> <%= user.Indirizzo %></p>
                 <p><strong>Numero di telefono:</strong> <%= user.NumeroDiTelefono %></p>
                 <a href="/modifica_account" class="btn btn-primary">Modifica i tuoi dettagli</a>
+
+                <!-- Dettagli di pagamento salvati -->
+                <div class="mt-4">
+                    <h5>Metodi di Pagamento Salvati</h5>
+                    <% if (savedCards && savedCards.length > 0) { %>
+                        <ul class="list-group">
+                            <% savedCards.forEach(card => { %>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <p><strong>Intestatario:</strong> <%= card.Intestatario %></p>
+                                        <p><strong>Numero Carta:</strong> **** **** **** <%= card.NumeroCarta.slice(-4) %></p>
+                                        <p><strong>Scadenza:</strong> <%= card.Scadenza %></p>
+                                    </div>
+                                    <button class="btn btn-danger btn-sm" onclick="rimuoviCarta(<%= card.ID %>)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </li>
+                            <% }); %>
+                        </ul>
+                    <% } else { %>
+                        <p>Non hai salvato alcun metodo di pagamento.</p>
+                    <% } %>
+                </div>
             </div>
 
             <!-- Ordini effettuati -->
@@ -47,6 +70,79 @@
             </div>
         </div>
     </div>
+
+    <script>
+        function rimuoviCarta(cardId) {
+            if (confirm('Sei sicuro di voler rimuovere questo metodo di pagamento?')) {
+                fetch(`/rimuovi_carta/${cardId}`, { method: 'DELETE' })
+                    .then(response => {
+                        if (response.ok) {
+                            location.reload();
+                        } else {
+                            alert('Errore durante la rimozione della carta.');
+                        }
+                    });
+            }
+        }
+
+        document.getElementById('metodoPagamento').addEventListener('change', function () {
+            const creditCardDetails = document.getElementById('creditCardDetails');
+            const isCreditCard = this.value === 'carta';
+
+            // Mostra o nasconde i dettagli della carta di credito
+            creditCardDetails.style.display = isCreditCard ? 'block' : 'none';
+
+            // Gestisce l'attributo "required" per i campi della carta di credito
+            const creditCardFields = ['intestatario', 'numeroCarta', 'scadenza', 'cvv'];
+            creditCardFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (isCreditCard) {
+                    field.required = true;
+                } else {
+                    field.required = false;
+                    field.value = ''; // Resetta il valore del campo per evitare errori di validazione
+                    field.setCustomValidity(''); // Rimuove eventuali messaggi di errore personalizzati
+                }
+            });
+        });
+
+        // Formatta il numero della carta di credito
+        document.getElementById('numeroCarta').addEventListener('input', function () {
+            this.value = this.value.replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim();
+        });
+
+        // Valida la data di scadenza
+        const scadenzaInput = document.getElementById('scadenza');
+        const errorMessage = document.createElement('div');
+        errorMessage.style.color = 'red';
+        errorMessage.style.fontSize = '0.9em';
+        errorMessage.style.display = 'none';
+        scadenzaInput.parentNode.appendChild(errorMessage);
+
+        scadenzaInput.addEventListener('input', function () {
+            // Aggiunge automaticamente la slash
+            this.value = this.value
+                .replace(/\D/g, '') // Rimuove caratteri non numerici
+                .replace(/^(\d{2})(\d{1,2})$/, '$1/$2'); // Aggiunge la slash dopo i primi due numeri
+
+            // Controlla se la data è valida
+            const [month, year] = this.value.split('/').map(Number);
+            const currentDate = new Date();
+            const currentMonth = currentDate.getMonth() + 1; // I mesi in JavaScript partono da 0
+            const currentYear = currentDate.getFullYear() % 100; // Prende solo le ultime due cifre dell'anno
+
+            if (
+                this.value.length === 5 && // Controlla che il formato sia MM/YY
+                (isNaN(month) || isNaN(year) || month < 1 || month > 12 || year < currentYear || (year === currentYear && month < currentMonth))
+            ) {
+                errorMessage.textContent = 'La data di scadenza è antecedente a quella attuale.';
+                errorMessage.style.display = 'block';
+            } else {
+                errorMessage.style.display = 'none';
+            }
+        });
+    </script>
+
     <%- include('footer') %>
 </body>
 </html>

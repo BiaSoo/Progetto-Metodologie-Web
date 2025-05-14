@@ -6,6 +6,7 @@ const session = require('express-session');
 const bcrypt = require('bcrypt');
 const multer = require('multer');
 const fs = require('fs');
+const favicon = require('serve-favicon');
 const app = express();
 const port = 3000;
 
@@ -42,6 +43,9 @@ app.use('/images', express.static(path.join(__dirname, 'public/images')));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json()); // middleware per analizzare il corpo delle richieste JSON
 app.use(express.json());
+
+// Serve the favicon
+app.use(favicon(path.join(__dirname, 'public', 'images', 'favicon', 'favicon.ico')));
 
 // Configura il middleware per le sessioni
 app.use(session({
@@ -1189,7 +1193,7 @@ app.post('/aggiungi_wishlist', isAuthenticatedAndNotAdmin, async (req, res) => {
     const { productId, quantity } = req.body;
     const emailUtente = req.session.user.Email;
 
-    if (!productId || isNaN(quantity) || quantity < 1) {
+    if (!productId || isNaN(quantita) || quantita < 1) {
         return res.status(400).json({ success: false, message: 'ID o quantità non validi.' });
     }
 
@@ -1205,7 +1209,7 @@ app.post('/aggiungi_wishlist', isAuthenticatedAndNotAdmin, async (req, res) => {
             return res.json({ success: false, message: 'Prodotto non trovato.' });
         }
 
-        if (row.Quantita < quantity) {
+        if (row.Quantita < quantita) {
             return res.json({ success: false, message: 'Quantità non disponibile in magazzino.' });
         }
 
@@ -1215,7 +1219,7 @@ app.post('/aggiungi_wishlist', isAuthenticatedAndNotAdmin, async (req, res) => {
                  VALUES (?, ?, ?, ?) 
                  ON CONFLICT(EmailUtente, ID_Prodotto) 
                  DO UPDATE SET Quantita = Quantita + excluded.Quantita`,
-                [emailUtente, req.session.sessionID, productId, quantity],
+                [emailUtente, req.session.sessionID, productId, quantita],
                 (err) => {
                     if (err) reject(err);
                     else resolve();

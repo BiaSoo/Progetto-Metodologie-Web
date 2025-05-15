@@ -670,94 +670,17 @@ app.get('/ricerca', (req, res) => {
     }
 });
 
-// Route per le altre pagine
-app.get('/skincare', (req, res) => {
-    db.all('SELECT * FROM Prodotti WHERE Categoria = ? AND Disponibile = 1', ['Skincare'], (err, rows) => {
-        if (err) {
-            return res.status(500).send('Errore nel recupero dei prodotti Skincare');
-        }
-        res.render('skincare', { products: rows, user: req.session.user });
-    });
-});
+// Route dinamica per le categorie
+app.get('/categoria/:nome', (req, res) => {
+    const categoria = req.params.nome;
 
-app.get('/farmaci_generici', (req, res) => {
-    db.all('SELECT * FROM Prodotti WHERE Categoria = ? AND Disponibile = 1', ['Farmaci Generici'], (err, rows) => {
+    db.all('SELECT * FROM Prodotti WHERE Categoria = ? AND Disponibile = 1', [categoria], (err, rows) => {
         if (err) {
-            return res.status(500).send('Errore nel recupero dei prodotti Farmaci Generici');
+            console.error(`Errore nel recupero dei prodotti per la categoria ${categoria}:`, err.message);
+            return res.status(500).send('Errore nel recupero dei prodotti');
         }
-        res.render('farmaci_generici', { products: rows, user: req.session.user });
-    });
-});
 
-app.get('/erboristeria', (req, res) => {
-    db.all('SELECT * FROM Prodotti WHERE Categoria = ? AND Disponibile = 1', ['Erboristeria'], (err, rows) => {
-        if (err) {
-            return res.status(500).send('Errore nel recupero dei prodotti Erboristeria');
-        }
-        res.render('erboristeria', { products: rows, user: req.session.user });
-    });
-});
-
-app.get('/integratori', (req, res) => {
-    db.all('SELECT * FROM Prodotti WHERE Categoria = ? AND Disponibile = 1', ['Integratori'], (err, rows) => {
-        if (err) {
-            return res.status(500).send('Errore nel recupero dei prodotti Integratori');
-        }
-        res.render('integratori', { products: rows, user: req.session.user });
-    });
-});
-
-app.get('/prodotti_esposizione', (req, res) => {
-    db.all('SELECT * FROM Prodotti WHERE Categoria = ? AND Disponibile = 1', ['Prodotti Esposizione'], (err, rows) => {
-        if (err) {
-            return res.status(500).send('Errore nel recupero dei prodotti Prodotti Esposizione');
-        }
-        res.render('prodotti_esposizione', { products: rows, user: req.session.user });
-    });
-});
-
-app.get('/omeopatici', (req, res) => {
-    db.all('SELECT * FROM Prodotti WHERE Categoria = ? AND Disponibile = 1', ['Omeopatici'], (err, rows) => {
-        if (err) {
-            return res.status(500).send('Errore nel recupero dei prodotti Omeopatici');
-        }
-        res.render('omeopatici', { products: rows, user: req.session.user });
-    });
-});
-
-app.get('/bambini', (req, res) => {
-    db.all('SELECT * FROM Prodotti WHERE Categoria = ? AND Disponibile = 1', ['Prima Infanzia'], (err, rows) => {
-        if (err) {
-            return res.status(500).send('Errore nel recupero dei prodotti Prima Infanzia');
-        }
-        res.render('bambini', { products: rows, user: req.session.user });
-    });
-});
-
-app.get('/capelli', (req, res) => {
-    db.all('SELECT * FROM Prodotti WHERE Categoria = ? AND Disponibile = 1', ['Capelli'], (err, rows) => {
-        if (err) {
-            return res.status(500).send('Errore nel recupero dei prodotti Capelli');
-        }
-        res.render('capelli', { products: rows, user: req.session.user });
-    });
-});
-
-app.get('/igiene_orale', (req, res) => {
-    db.all('SELECT * FROM Prodotti WHERE Categoria = ? AND Disponibile = 1', ['Igiene Orale'], (err, rows) => {
-        if (err) {
-            return res.status(500).send('Errore nel recupero dei prodotti Igiene Orale');
-        }
-        res.render('igiene_orale', { products: rows, user: req.session.user });
-    });
-});
-
-app.get('/ortopedici', (req, res) => {
-    db.all('SELECT * FROM Prodotti WHERE Categoria = ? AND Disponibile = 1', ['Ortopedici'], (err, rows) => {
-        if (err) {
-            return res.status(500).send('Errore nel recupero dei prodotti Ortopedici');
-        }
-        res.render('ortopedici', { products: rows, user: req.session.user });
+        res.render('categoria', { category: categoria, products: rows, user: req.session.user });
     });
 });
 
@@ -1193,7 +1116,7 @@ app.post('/aggiungi_wishlist', isAuthenticatedAndNotAdmin, async (req, res) => {
     const { productId, quantity } = req.body;
     const emailUtente = req.session.user.Email;
 
-    if (!productId || isNaN(quantita) || quantita < 1) {
+    if (!productId || isNaN(quantity) || quantity < 1) { // Usa "quantity" qui
         return res.status(400).json({ success: false, message: 'ID o quantità non validi.' });
     }
 
@@ -1209,7 +1132,7 @@ app.post('/aggiungi_wishlist', isAuthenticatedAndNotAdmin, async (req, res) => {
             return res.json({ success: false, message: 'Prodotto non trovato.' });
         }
 
-        if (row.Quantita < quantita) {
+        if (row.Quantita < quantity) { 
             return res.json({ success: false, message: 'Quantità non disponibile in magazzino.' });
         }
 
@@ -1219,7 +1142,7 @@ app.post('/aggiungi_wishlist', isAuthenticatedAndNotAdmin, async (req, res) => {
                  VALUES (?, ?, ?, ?) 
                  ON CONFLICT(EmailUtente, ID_Prodotto) 
                  DO UPDATE SET Quantita = Quantita + excluded.Quantita`,
-                [emailUtente, req.session.sessionID, productId, quantita],
+                [emailUtente, req.session.sessionID, productId, quantity], 
                 (err) => {
                     if (err) reject(err);
                     else resolve();

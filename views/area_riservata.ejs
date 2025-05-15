@@ -75,22 +75,33 @@
             document.getElementById('edit-product-form').style.display = 'none';
         }
 
-        // Gestione drag-and-drop per il caricamento delle immagini
-        const dragDropArea = document.getElementById('dragDropArea');
-        const productImageInput = document.getElementById('productImage');
+        document.addEventListener('DOMContentLoaded', () => {
+            const dragDropArea = document.getElementById('dragDropArea');
+            const productImageInput = document.getElementById('productImage');
 
-        dragDropArea.addEventListener('click', () => productImageInput.click());
-        dragDropArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            dragDropArea.classList.add('dragover');
-        });
-        dragDropArea.addEventListener('dragleave', () => dragDropArea.classList.remove('dragover'));
-        dragDropArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dragDropArea.classList.remove('dragover');
-            const file = e.dataTransfer.files[0];
-            productImageInput.files = e.dataTransfer.files;
-            dragDropArea.textContent = file.name;
+            if (dragDropArea && productImageInput) {
+                dragDropArea.addEventListener('click', () => productImageInput.click());
+                dragDropArea.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    dragDropArea.classList.add('dragover');
+                });
+                dragDropArea.addEventListener('dragleave', () => dragDropArea.classList.remove('dragover'));
+                dragDropArea.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    dragDropArea.classList.remove('dragover');
+                    try {
+                        const file = e.dataTransfer.files[0];
+                        if (file) {
+                            productImageInput.files = e.dataTransfer.files;
+                            dragDropArea.textContent = file.name;
+                        } else {
+                            console.error('No file dropped.');
+                        }
+                    } catch (error) {
+                        console.error('Error handling dropped file:', error);
+                    }
+                });
+            }
         });
     </script>
     <%- include('footer') %>

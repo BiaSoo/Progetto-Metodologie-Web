@@ -25,7 +25,7 @@
 <body>
 <%- include('navbar', { user: user }) %>
 <div class="container mt-5">
-    <h1 class="mb-4">La tua Wishlist</h1>
+    <h1 class="text-center">La tua Wishlist</h1>
     <div class="row">
         <% if (wishlistItems.length > 0) { %>
             <% wishlistItems.forEach(item => { %>
@@ -62,7 +62,7 @@
                 </div>
             <% }); %>
         <% } else { %>
-            <p>La tua wishlist è vuota.</p>
+            <p class="text-center">La tua wishlist è vuota.</p>
         <% } %>
     </div>
 </div>

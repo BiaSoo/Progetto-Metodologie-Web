@@ -1,0 +1,20 @@
+Per avviare correttamente il progetto è necessario, dopo aver estratto l'intera cartella, aprire un terminale all'interno della cartella e installare le seguenti dipendenze: 
+	-express
+	-bcrypt
+	-sqlite3
+	-body-parser
+	-express-session
+	-multer
+	-serve-favicon
+	-ejs
+E' possibile farlo ad esempio tramite il comando "npm install nome-dipendenza".
+Risulta, necessario scaricare dal seguente sito https://nodejs.org/. Node.js se già non lo si possiede. 
+
+Dopo di che sarà possibile avviare il server grazie al comando "node server.js"
+Il server, come specificato nella console, sarà disponibile a questo indirizzo: http://localhost:3000 al quale si potrà accedere direttamente dal browser.
+Una volta aperto il browser e selezionato l'indirizzo specificato, ci troviamo davanti il sito web, nel caso in cui il database necessitasse di essere popolato con i dati che ho creato, sarebbe necessario aprire il database tramite un applicativo ad esempio DBrowser, dopo di che eseguire la query contenuta nel file "query_popolamento.txt".
+
+Per utilizzare gli utenti che ho precedentemente creato, sono necessarie le seguenti credenziali:
+1) utente amministratore-> nome utente: admin@example.com password: admin (N.B le credenziali di questo utente vanno inserite nell'accesso riservato)
+2) utenti normali-> nome utente: user@example.com password: 1234
+3) nome utente: gabriele@gmail.com password: password_gabriele

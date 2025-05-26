@@ -525,6 +525,32 @@ app.post('/modifica_prodotto', upload.single('immagine'), (req, res) => {
     });
 });
 
+// Route per eliminare un prodotto
+app.post('/elimina_prodotto', isAdmin, (req, res) => {
+    const productId = req.body.id;
+    if (!productId) {
+        return res.status(400).send('ID prodotto non valido.');
+    }
+    db.get('SELECT * FROM Prodotti WHERE ID = ?', [productId], (err, prodotto) => {
+        if (err) {
+            console.error('Errore durante il recupero del prodotto da eliminare:', err.message);
+            return res.status(500).send('Errore durante l\'eliminazione del prodotto.');
+        }
+        db.run('DELETE FROM Prodotti WHERE ID = ?', [productId], function(err) {
+            if (err) {
+                console.error('Errore durante l\'eliminazione del prodotto:', err.message);
+                return res.status(500).send('Errore durante l\'eliminazione del prodotto.');
+            }
+            if (prodotto) {
+                console.log(`Prodotto eliminato: ID=${prodotto.ID}, Nome='${prodotto.Nome}'`);
+            } else {
+                console.log(`Prodotto eliminato: ID=${productId}`);
+            }
+            res.redirect('/gestione_prodotti');
+        });
+    });
+});
+
 // Route per il logout
 app.get('/logout', (req, res) => {
     req.session.destroy();

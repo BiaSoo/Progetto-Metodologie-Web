@@ -52,6 +52,10 @@
                 <a href="/gestione_prodotti" class="btn btn-secondary">Annulla</a>
             </div>
         </form>
+        <form id="deleteProductForm" action="/elimina_prodotto" method="POST" >
+            <input type="hidden" name="id" value="<%= product.ID %>">
+            <button type="button" class="btn btn-danger w-100" onclick="confermaEliminazione()">Elimina Prodotto</button>
+        </form>
     </div>
     <%- include('footer') %>
 
@@ -64,6 +68,11 @@
             } else {
                 newCategoryDiv.style.display = 'none';
                 document.getElementById('newCategory').required = false;
+            }
+        }
+        function confermaEliminazione() {
+            if (confirm('Sei sicuro di voler eliminare questo prodotto? Questa azione non può essere annullata.')) {
+                document.getElementById('deleteProductForm').submit();
             }
         }
     </script>

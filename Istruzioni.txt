@@ -18,3 +18,5 @@ Per utilizzare gli utenti che ho precedentemente creato, sono necessarie le segu
 1) utente amministratore-> nome utente: admin@example.com password: admin (N.B le credenziali di questo utente vanno inserite nell'accesso riservato)
 2) utenti normali-> nome utente: user@example.com password: 1234
 3) nome utente: gabriele@gmail.com password: password_gabriele
+
+link al video su Youtube: https://www.youtube.com/watch?v=CowIRSePV70

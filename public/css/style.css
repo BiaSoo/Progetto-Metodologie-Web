@@ -197,7 +197,7 @@ body {
 /* Stile per il carosello */
 .carousel-item img {
     height: 400px;
-    object-fit: cover;
+    object-fit: contain;
 }
 
 .carousel-caption h5 {
@@ -224,9 +224,8 @@ body {
 .card {
     border: 1px solid #e0e0e0; 
     border-radius: 5px;
-    overflow: hidden;
     transition: all 0.3s ease; 
-    height: 350px; 
+    height: 450px; /* aumentata */
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -238,16 +237,22 @@ body {
 }
 
 .card-img-top {
-    height: 200px;
+    height: 380px;      
     object-fit: cover;
+    background: #fff;
+    display: block;
+    margin: 0 auto;
+    padding: 5px 0;
+    box-sizing: border-box;
+    max-width: 43%;    
+    max-height: 100%;
 }
 
 .card-body {
-    padding: 15px;
+    padding: 5px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    height: calc(100% - 200px); 
 }
 
 .card-title {

@@ -1049,8 +1049,44 @@ app.post('/checkout', (req, res) => {
                         });
                     });
 
+                    const magazzinoPromises = cartItems.map(item => {
+                        return new Promise((resolve, reject) => {
+                            db.get(
+                                `SELECT Quantita FROM Prodotti WHERE ID = ?`,
+                                [item.ID_Prodotto],
+                                (err, row) => {
+                                    if (err) {
+                                        return reject(err);
+                                    }
+
+                                    if (row.Quantita < item.Quantita) {
+                                        return reject(new Error(`Quantità insufficiente per il prodotto con ID ${item.ID_Prodotto}`));
+                                    }
+
+                                    db.run(
+                                        `UPDATE Prodotti SET Quantita = Quantita - ? WHERE ID = ?`,
+                                        [item.Quantita, item.ID_Prodotto],
+                                        (err) => {
+                                            if (err) reject(err);
+                                            else resolve();
+                                        }
+                                    );
+                                }
+                            );
+                        });
+                    });
+
                     Promise.all(dettagliPromises)
                         .then(() => {
+                            // Log riepilogo ordine
+                            console.log(`Ordine effettuato da utente: ${emailUtente}`);
+                            console.log('Prodotti:');
+                            cartItems.forEach(item => {
+                                console.log(`- ID Prodotto: ${item.ID_Prodotto}, Quantità: ${item.Quantita}`);
+                            });
+                            console.log(`Totale ordine: €${totale.toFixed(2)}`);
+                            console.log(`Numero ordine: ${orderId}`);
+                            
                             db.run(
                                 `DELETE FROM Carrello WHERE (EmailUtente = ? OR SessionID = ?)`,
                                 [emailUtente, sessionID],
